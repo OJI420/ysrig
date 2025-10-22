@@ -9,7 +9,7 @@
 ---
 
 ## インストール手順
-![Image](https://github.com/user-attachments/assets/96f4e792-b0eb-49d3-9a1d-5973a152a547)
+![Image](https://github.com/user-attachments/assets/1e0a383e-f990-456b-8a33-092119f63c48)
 ### インストーラーで自動インストール
 1. Releaseからzipファイルをダウンロードし解凍
 2. Mayaを起動し、drag_and_drop.pyをビューポート上にドラッグアンドドロップしてインストーラーを起動
