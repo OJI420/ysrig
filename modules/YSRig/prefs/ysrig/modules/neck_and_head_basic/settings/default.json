@@ -1,0 +1,13 @@
+{
+    "Frame1": "None",
+    "Side": 0,
+    "GroupName": "Neck",
+    "HeadJointName": "Head",
+    "Frame2": "None",
+    "JointCount": 3.0,
+    "GoalBone": true,
+    "Mirror": false,
+    "Frame4": "None",
+    "Translate": true,
+    "ConnectType": 1
+}

@@ -1,0 +1,18 @@
+{
+    "Frame1": "None",
+    "Side": 1,
+    "GroupName": "Arm",
+    "ShoulderName": "Shoulder",
+    "UpperArmName": "UpperArm",
+    "ForeArmName": "ForeArm",
+    "HandName": "Hand",
+    "Frame2": "None",
+    "GoalBone": false,
+    "Mirror": true,
+    "TwistJointCount": 0,
+    "Frame3": "None",
+    "IKCtrlShapeType": 0,
+    "PVCtrlShapeType": 1,
+    "Frame4": "None",
+    "ConnectType": 1
+}

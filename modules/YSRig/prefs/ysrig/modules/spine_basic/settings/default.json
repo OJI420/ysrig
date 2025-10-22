@@ -1,0 +1,10 @@
+{
+    "Frame1": "None",
+    "GroupName": "Spine",
+    "HipJointName": "Hip",
+    "Frame2": "None",
+    "JointCount": 3.0,
+    "Frame4": "None",
+    "Translate": true,
+    "ConnectType": 1
+}

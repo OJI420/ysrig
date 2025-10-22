@@ -1,0 +1,35 @@
+{
+    "Frame1": "None",
+    "Side": 1,
+    "GroupName": "Finger",
+    "FingerNames": [
+        [
+            "Thumb",
+            false
+        ],
+        [
+            "Index",
+            false
+        ],
+        [
+            "Middle",
+            false
+        ],
+        [
+            "Ring",
+            true
+        ],
+        [
+            "Pinky",
+            true
+        ]
+    ],
+    "Frame2": "None",
+    "GoalBone": true,
+    "Mirror": true,
+    "Frame3": "None",
+    "CtrlShapeType": 2,
+    "Frame4": "None",
+    "Translate": true,
+    "ConnectType": 1
+}

@@ -1,0 +1,14 @@
+{
+    "Frame1": "None",
+    "Side": 0,
+    "GroupName": "Chain",
+    "Frame2": "None",
+    "ChainJointCount": 3.0,
+    "GoalBone": true,
+    "Mirror": true,
+    "Frame3": "None",
+    "CtrlShapeType": 2,
+    "Frame4": "None",
+    "Translate": true,
+    "ConnectType": 1
+}

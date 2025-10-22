@@ -1,0 +1,36 @@
+{
+    "Frame1": "None",
+    "SpineJointCount": 3,
+    "NeckJointCount": 3,
+    "ArmTwistJointCount": 0,
+    "LegTwistJointCount": 0,
+    "UseFinger": true,
+    "FingerNames": [
+        [
+            "Thumb",
+            false
+        ],
+        [
+            "Index",
+            false
+        ],
+        [
+            "Middle",
+            false
+        ],
+        [
+            "Ring",
+            true
+        ],
+        [
+            "Pinky",
+            true
+        ]
+    ],
+    "UseToeSub": true,
+    "UseJaw": true,
+    "UseEyes": true,
+    "UseEyelid": true,
+    "Frame2": "None",
+    "ConnectType": 1
+}

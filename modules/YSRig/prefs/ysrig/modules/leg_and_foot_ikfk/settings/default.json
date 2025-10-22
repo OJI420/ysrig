@@ -1,0 +1,19 @@
+{
+    "Frame1": "None",
+    "Side": 1,
+    "GroupName": "Leg",
+    "UpperLegName": "UpperLeg",
+    "ForeLegName": "ForeLeg",
+    "FootName": "Foot",
+    "ToeName": "Toe",
+    "UseToeSub" : true,
+    "ToeSubName": "ToeSub",
+    "Frame2": "None",
+    "GoalBone": true,
+    "Mirror": true,
+    "TwistJointCount": 0,
+    "Frame3": "None",
+    "PVCtrlShapeType": 1,
+    "Frame4": "None",
+    "ConnectType": 1
+}
