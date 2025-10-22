@@ -1,7 +1,7 @@
 import sys
 import math
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List, Dict, Optional
 from ysrig import gui_base
 
 if int(gui_base.ver) <= 2024:
@@ -31,13 +31,14 @@ else: # PySide2
 TITLE = "Picker Editor"
 
 # ------------------------------------------------------------------------------
-# データクラス（変更なし）
+# データクラス（★修正★）
 # ------------------------------------------------------------------------------
 @dataclass
 class ButtonData:
     name: str
     shape_points: List[Dict[str, float]]
     position: Dict[str, float] = field(default_factory=lambda: {'x': 0, 'y': 0})
+    color: Optional[str] = None  # ★色情報を追加（例: "#ff0000"）
 
 @dataclass
 class PickerModuleData:
@@ -131,12 +132,15 @@ class LockCommand(QUndoCommand):
         self.editor.update_transform_ui()
 
 # ------------------------------------------------------------------------------
-# 任意の形状を描画できるように変更したボタンアイテム（変更なし）
+# 任意の形状を描画できるように変更したボタンアイテム（★修正★）
 # ------------------------------------------------------------------------------
 class PickerButtonItem(QtWidgets.QGraphicsPathItem):
     """
     QGraphicsPathItemを継承し、ButtonDataのshape_pointsから任意の形状を生成する。
     """
+    DEFAULT_COLOR = QtGui.QColor("#3498db")
+    SELECTED_COLOR = QtGui.QColor("#00ff1e")  # ★選択色を緑に変更
+
     def __init__(self, button_data: ButtonData, parent=None):
         super().__init__(parent)
         
@@ -155,8 +159,17 @@ class PickerButtonItem(QtWidgets.QGraphicsPathItem):
                     QtCore.QPointF(*command["end"])
                 )
         self.setPath(path)
-        self.color_default = QtGui.QColor("#3498db")
-        self.color_selected = QtGui.QColor("#f1c40f")
+
+        # ★色の設定★
+        # ButtonDataに色が指定されていればそれを使う
+        if button_data.color:
+            self.color_default = QtGui.QColor(button_data.color)
+        else:
+            self.color_default = self.DEFAULT_COLOR
+        
+        # 選択色
+        self.color_selected = self.SELECTED_COLOR
+
         self.setPen(QtGui.QPen(QtCore.Qt.black, 1))
         self.set_display_state('default')
 
@@ -165,11 +178,9 @@ class PickerButtonItem(QtWidgets.QGraphicsPathItem):
             self.setBrush(self.color_selected)
         else:
             self.setBrush(self.color_default)
-
 # ------------------------------------------------------------------------------
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-# ★ 不安定な動作を修正し、選択処理を安定化させたモジュール ★
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+# 選択処理を安定化させたモジュール（変更なし）
+# ------------------------------------------------------------------------------
 class PickerModuleItem(QtWidgets.QGraphicsItemGroup):
     """
     自身のTransformプロパティを一元管理し、UIとの連携を行うモジュール。
@@ -252,7 +263,6 @@ class PickerModuleItem(QtWidgets.QGraphicsItemGroup):
         self.flip_v = not self.flip_v
         self.update_transform_from_properties()
     
-    # ★★★ 修正箇所 ★★★
     def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent):
         """
         マウスプレス時のイベント。選択処理を完全に手動で管理し、安定させる。
@@ -367,10 +377,11 @@ class PickerModuleItem(QtWidgets.QGraphicsItemGroup):
         painter.drawRect(self.boundingRect())
 
 # ------------------------------------------------------------------------------
-# UI連携機能を実装したメインウィンドウ（右クリックメニューを並び替え）
+# UI連携機能を実装したメインウィンドウ（★修正★）
 # ------------------------------------------------------------------------------
 class GraphicsEditor(QtWidgets.QMainWindow):
-    def __init__(self, parent=gui_base.maya_main_window):
+    # ★__init__でmodules_dataを受け取るように変更
+    def __init__(self, modules_data: List[PickerModuleData], parent=gui_base.maya_main_window):
         super().__init__(parent)
         self.pre_close()
 
@@ -427,9 +438,10 @@ class GraphicsEditor(QtWidgets.QMainWindow):
         self._setup_transform_controls(panel_layout)
         main_layout.addWidget(control_panel)
         self.setCentralWidget(main_widget)
-        self.modules_data = [mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, 
-                             mod9, mod10, mod11, mod12, mod13, mod14, mod15, mod16,
-                             mod_asymmetric, mod17]
+        
+        # ★引数で受け取ったデータを使用
+        self.modules_data = modules_data
+        
         for mod_data in self.modules_data:
             self.create_module_from_data(mod_data)
         self.populate_outliner()
@@ -674,7 +686,6 @@ class GraphicsEditor(QtWidgets.QMainWindow):
         self._is_syncing_selection = False
         self.update_transform_ui()
     
-    # ★★★★★★★★★★ 修正箇所 ★★★★★★★★★★
     def on_outliner_context_menu(self, point):
         menu = QtWidgets.QMenu(self.outliner)
         has_selection = bool(self.outliner.selectedItems())
@@ -877,28 +888,56 @@ class GraphicsEditor(QtWidgets.QMainWindow):
         self.view.fitInView(self.scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
 # ------------------------------------------------------------------------------
-# ユーザー提供のデータ（変更なし）
+# 外部データ定義と実行（★修正★）
 # ------------------------------------------------------------------------------
-mod1 = PickerModuleData(name="sh_module_01", position={'x': -400, 'y': -150}, buttons=[ButtonData(name="s", shape_points=[{'pos': [0, 0]},{'pos': [40, 0]},{'pos': [40, 40]},{'pos': [0, 40]},{'pos': [0, 0]}], position={'x': 0, 'y': 0})])
-mod2 = PickerModuleData(name="sh_module_02", position={'x': 100, 'y': 100}, buttons=[ButtonData(name="e", shape_points=[{'pos': [30, 0]},{'pos': [0, -30]},{'pos': [70, -30]},{'pos': [40, 0]},{'pos': [30, 0]}], position={'x': 0, 'y': 0})])
-mod3 = PickerModuleData(name="sh_module_03", position={'x': -200, 'y': 250}, buttons=mod1.buttons)
-mod4 = PickerModuleData(name="sh_module_04", position={'x': 200, 'y': -250}, buttons=mod2.buttons)
-mod5 = PickerModuleData(name="sh_module_05", position={'x': -400, 'y': 150}, buttons=mod1.buttons)
-mod6 = PickerModuleData(name="sh_module_06", position={'x': 100, 'y': -100}, buttons=mod2.buttons)
-mod7 = PickerModuleData(name="sh_module_07", position={'x': -100, 'y': -300}, buttons=mod1.buttons)
-mod8 = PickerModuleData(name="sh_module_08", position={'x': 300, 'y': 300}, buttons=mod2.buttons)
-mod9 = PickerModuleData(name="sh_module_09", position={'x': 400, 'y': -350}, buttons=mod1.buttons)
-mod10 = PickerModuleData(name="sh_module_10", position={'x': -100, 'y': 400}, buttons=mod2.buttons)
-mod11 = PickerModuleData(name="sh_module_11", position={'x': -250, 'y': -250}, buttons=mod1.buttons)
-mod12 = PickerModuleData(name="sh_module_12", position={'x': 250, 'y': 250}, buttons=mod2.buttons)
-mod13 = PickerModuleData(name="sh_module_13", position={'x': -450, 'y': 0}, buttons=mod1.buttons)
-mod14 = PickerModuleData(name="sh_module_14", position={'x': 0, 'y': -450}, buttons=mod2.buttons)
-mod15 = PickerModuleData(name="sh_module_15", position={'x': 450, 'y': 0}, buttons=mod1.buttons)
-mod16 = PickerModuleData(name="sh_module_16", position={'x': 0, 'y': 450}, buttons=mod2.buttons)
-mod_asymmetric = PickerModuleData(name="asymmetric_module", position={'x': -60, 'y': -40}, buttons=[ButtonData(name="L_shape", shape_points=[{'pos': [0, 0]},{'pos': [80, 0]},{'pos': [80, 20]},{'pos': [20, 20]},{'pos': [20, 80]},{'pos': [0, 80]},{'pos': [0, 0]}], position={'x': 0, 'y': 0})])
-mod17 = PickerModuleData(name="sh", position={'x': -400, 'y': -150}, buttons=[ButtonData(name="s", shape_points=[{'pos': [0, 0]},{'pos': [40, 0]},{'pos': [40, 40]},{'pos': [0, 40]},{'pos': [0, 0]}], position={'x': 0, 'y': 0}), ButtonData(name="u", shape_points=[{'pos': [0, 10]},{'pos': [60, 5]},{'pos': [60, 35]},{'pos': [0, 30]},{'pos': [0, 10]}], position={'x': 50, 'y': 0}), ButtonData(name="e", shape_points=[{'pos': [0, 0]},{'pos': [40, 0]},{'pos': [40, 40]},{'pos': [0, 40]},{'pos': [0, 0]}], position={'x': 120, 'y': 0}), ButtonData(name="b", shape_points=[{'pos': [0, 5]},{'pos': [60, 10]},{'pos': [60, 30]},{'pos': [0, 35]},{'pos': [0, 5]}], position={'x': 170, 'y': 0}), ButtonData(name="u", shape_points=[{'pos': [0, 10]},{'pos': [30, 0]},{'pos': [50, 0]},{'pos': [50, 40]},{'pos': [30, 40]},{'pos': [0, 30]},{'pos': [0, 10]}], position={'x': 240, 'y': 0})])
+def get_sample_data():
+    """
+    外部データ（サンプル）を生成して返す関数。
+    実際の運用では、この関数がファイル読み込みやDBアクセスを担うことになります。
+    """
+    # ★色情報を付与したサンプルデータ
+    mod1_btn = ButtonData(name="s", shape_points=[{'pos': [0, 0]},{'pos': [40, 0]},{'pos': [40, 40]},{'pos': [0, 40]},{'pos': [0, 0]}], position={'x': 0, 'y': 0}, color="#e74c3c") # 赤
+    mod2_btn = ButtonData(name="e", shape_points=[{'pos': [30, 0]},{'pos': [0, -30]},{'pos': [70, -30]},{'pos': [40, 0]},{'pos': [30, 0]}], position={'x': 0, 'y': 0}, color="#2ecc71") # 緑
+    mod_asym_btn = ButtonData(name="L_shape", shape_points=[{'pos': [0, 0]},{'pos': [80, 0]},{'pos': [80, 20]},{'pos': [20, 20]},{'pos': [20, 80]},{'pos': [0, 80]},{'pos': [0, 0]}], position={'x': 0, 'y': 0}) # 色なし（デフォルト）
+
+    mod1 = PickerModuleData(name="sh_module_01", position={'x': -400, 'y': -150}, buttons=[mod1_btn])
+    mod2 = PickerModuleData(name="sh_module_02", position={'x': 100, 'y': 100}, buttons=[mod2_btn])
+    mod3 = PickerModuleData(name="sh_module_03", position={'x': -200, 'y': 250}, buttons=[mod1_btn])
+    mod4 = PickerModuleData(name="sh_module_04", position={'x': 200, 'y': -250}, buttons=[mod2_btn])
+    mod5 = PickerModuleData(name="sh_module_05", position={'x': -400, 'y': 150}, buttons=[mod1_btn])
+    mod6 = PickerModuleData(name="sh_module_06", position={'x': 100, 'y': -100}, buttons=[mod2_btn])
+    mod7 = PickerModuleData(name="sh_module_07", position={'x': -100, 'y': -300}, buttons=[mod1_btn])
+    mod8 = PickerModuleData(name="sh_module_08", position={'x': 300, 'y': 300}, buttons=[mod2_btn])
+    mod9 = PickerModuleData(name="sh_module_09", position={'x': 400, 'y': -350}, buttons=[mod1_btn])
+    mod10 = PickerModuleData(name="sh_module_10", position={'x': -100, 'y': 400}, buttons=[mod2_btn])
+    mod11 = PickerModuleData(name="sh_module_11", position={'x': -250, 'y': -250}, buttons=[mod1_btn])
+    mod12 = PickerModuleData(name="sh_module_12", position={'x': 250, 'y': 250}, buttons=[mod2_btn])
+    mod13 = PickerModuleData(name="sh_module_13", position={'x': -450, 'y': 0}, buttons=[mod1_btn])
+    mod14 = PickerModuleData(name="sh_module_14", position={'x': 0, 'y': -450}, buttons=[mod2_btn])
+    mod15 = PickerModuleData(name="sh_module_15", position={'x': 450, 'y': 0}, buttons=[mod1_btn])
+    mod16 = PickerModuleData(name="sh_module_16", position={'x': 0, 'y': 450}, buttons=[mod2_btn])
+    mod_asymmetric = PickerModuleData(name="asymmetric_module", position={'x': -60, 'y': -40}, buttons=[mod_asym_btn])
+    
+    # 複数ボタンのモジュール（色を個別に設定）
+    mod17 = PickerModuleData(name="sh", position={'x': -400, 'y': 350}, buttons=[
+        ButtonData(name="s", shape_points=[{'pos': [0, 0]},{'pos': [40, 0]},{'pos': [40, 40]},{'pos': [0, 40]},{'pos': [0, 0]}], position={'x': 0, 'y': 0}, color="#e74c3c"), # 赤
+        ButtonData(name="u", shape_points=[{'pos': [0, 10]},{'pos': [60, 5]},{'pos': [60, 35]},{'pos': [0, 30]},{'pos': [0, 10]}], position={'x': 50, 'y': 0}, color="#f1c40f"), # 黄
+        ButtonData(name="e", shape_points=[{'pos': [0, 0]},{'pos': [40, 0]},{'pos': [40, 40]},{'pos': [0, 40]},{'pos': [0, 0]}], position={'x': 120, 'y': 0}), # デフォルト色
+        ButtonData(name="b", shape_points=[{'pos': [0, 5]},{'pos': [60, 10]},{'pos': [60, 30]},{'pos': [0, 35]},{'pos': [0, 5]}], position={'x': 170, 'y': 0}, color="#9b59b6"), # 紫
+        ButtonData(name="u", shape_points=[{'pos': [0, 10]},{'pos': [30, 0]},{'pos': [50, 0]},{'pos': [50, 40]},{'pos': [30, 40]},{'pos': [0, 30]},{'pos': [0, 10]}], position={'x': 240, 'y': 0}, color="#1abc9c") # ターコイズ
+    ])
+    
+    modules_list = [mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, 
+                    mod9, mod10, mod11, mod12, mod13, mod14, mod15, mod16,
+                    mod_asymmetric, mod17]
+    return modules_list
+
 
 def main():
-    editor_instance = GraphicsEditor()
+    # ★外部からデータを取得
+    modules_data = get_sample_data()
+    
+    # ★エディタにデータを渡してインスタンス化
+    editor_instance = GraphicsEditor(modules_data=modules_data)
     editor_instance.show()
     return editor_instance
