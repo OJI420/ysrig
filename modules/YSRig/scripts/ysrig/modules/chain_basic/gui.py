@@ -11,7 +11,7 @@ class Gui(gui_base.GuiBase):
         self.widget["GroupName"] = gui_base.YSLineEdit(label="★ Group Name", placeholder_text="Chain")
 
         self.widget["Frame2"] = gui_base.YSFrame(label="Skeleton")
-        self.widget["ChainJointCount"] = gui_base.YSDoubleSpinBox(label="★ Chain Joint Count", range=[1, 99], decimals=0, step=1)
+        self.widget["ChainJointCount"] = gui_base.YSDoubleSpinBox(label="★ Chain Joint Count", range=[1, 25], decimals=0, step=1)
         self.widget["GoalBone"] = gui_base.YSCheckBox(label="Goal Bone")
         self.widget["Mirror"] = gui_base.YSCheckBox(label="Mirror")
 

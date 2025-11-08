@@ -5,7 +5,7 @@ from maya import cmds, mel
 import maya.api.OpenMaya as om2
 
 
-VERSION = "2.1.0"
+VERSION = "2.1.1"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -1937,3 +1937,41 @@ def set_vtx_average_point(guide: str) -> list[float]:
     pos = [sum(p) / len(p) for p in zip(*pos)]
 
     cmds.move(*pos, guide, ws=True)
+
+
+def get_ctrl_color_code(name: str) -> str:
+    """
+    コントローラーのシェイプカラーをカラーコードで返す関数
+    """
+    name = f"Ctrl_{name}"
+    shape = cmds.listRelatives(name, s=True)[0]
+    rgb = cmds.getAttr(f"{shape}.overrideColorRGB")[0]
+    rgb = [int(c*255) for c in rgb]
+
+    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+
+
+def get_mirror_side(meta_node: str):
+    grp: str = cmds.getAttr(f"{meta_node}.GroupName")
+    mirror = cmds.getAttr(f"{meta_node}.Mirror")
+    primary_side = cmds.getAttr(f"{meta_node}.Side")
+
+    if not primary_side or not mirror:
+        return False, [None], [grp]
+
+    if primary_side == "L":
+        return True, ["L", "R"], [grp, grp.replace("L_", "R_")]
+
+    if primary_side == "R":
+        return True, ["R", "L"], [grp, grp.replace("R_", "L_")]
+
+
+def get_mirror_names(names, side_list, side):
+    if len(side_list) == 1:
+        return names
+
+    if side == side_list[1]:
+        return [name.replace(f"{side_list[0]}_", f"{side}_") for name in names]
+
+    else:
+        return names
