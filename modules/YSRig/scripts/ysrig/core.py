@@ -1,11 +1,13 @@
 import os
 import json
 import math
+import importlib
 from maya import cmds, mel
 import maya.api.OpenMaya as om2
+from ysrig import create_node
+importlib.reload(create_node)
 
-
-VERSION = "2.1.1"
+VERSION = "2.2.0"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -383,7 +385,7 @@ def create_labeled_node(node_type, ysnode_type, name=""):
     return node
 
 
-def create_node(node_type, name=""):
+def _create_node(node_type, name=""):
     if not name:
         name = node_type
 
@@ -529,14 +531,14 @@ def connect_curve_point(name, nodes: list, parent: str="", lc: bool=False) -> li
         cmds.makeIdentity(curve)
 
     for i, node in enumerate(nodes):
-        mm = create_node("multMatrix", name=f"Mm_{curve}_{i + 1}")
+        mm = _create_node("multMatrix", name=f"Mm_{curve}_{i + 1}")
         if lc:
             connect_local_matrix_to_mm(node, curve, mm, start=0)
 
         else:
             connect_world_matrix_to_mm(node, curve, mm, start=0)
 
-        dm = create_node("decomposeMatrix", name=f"Dm_{curve}_{i + 1}")
+        dm = _create_node("decomposeMatrix", name=f"Dm_{curve}_{i + 1}")
         cmds.connectAttr(f"{mm}.matrixSum", f"{dm}.inputMatrix")
         cmds.connectAttr(f"{dm}.outputTranslate", f"{shape}.controlPoints[{i}]")
 
@@ -1168,7 +1170,7 @@ def connect_matrix(src: str, dest: str, tl: bool=False, rt: bool=False, sc: bool
     Returns:
         list : 作成されたノードのリスト [mm_node, dm_node, mm_rot_node, dm_rot_node]
     """
-    mm_node = create_node("multMatrix", name=f"Mm_{dest}{suffix}")
+    mm_node = _create_node("multMatrix", name=f"Mm_{dest}{suffix}")
     cmds.setAttr(f"{mm_node}.matrixIn[0]", get_offset_matrix(src, dest), type="matrix")
     if lc:
         index = connect_local_matrix_to_mm(src, dest, mm_node)
@@ -1185,7 +1187,7 @@ def connect_matrix(src: str, dest: str, tl: bool=False, rt: bool=False, sc: bool
         cmds.setAttr(f"{mm_node}.matrixIn[{index}]", cmds.getAttr(f"{tmp_im}.outputMatrix"), type="matrix")
         cmds.delete(tmp_cm, tmp_im)
 
-    dm_node = create_node("decomposeMatrix", name=f"Dm_{dest}{suffix}")
+    dm_node = _create_node("decomposeMatrix", name=f"Dm_{dest}{suffix}")
     cmds.connectAttr(f"{mm_node}.matrixSum", f"{dm_node}.inputMatrix")
 
     mm_rot_node = None
@@ -1244,16 +1246,16 @@ def connect_uniform_scale(node):
 
 
 def connect_world_distance_node(node1, node2):
-    db = create_node("distanceBetween", name=f"Db_{node1}_{node2}")
+    db = _create_node("distanceBetween", name=f"Db_{node1}_{node2}")
     for i, node in enumerate([node1, node2]):
-        dm = create_node("decomposeMatrix", name=f"Dm_{db}_0{i + 1}")
+        dm = _create_node("decomposeMatrix", name=f"Dm_{db}_0{i + 1}")
         cmds.connectAttr(f"{node}.worldMatrix[0]", f"{dm}.inputMatrix")
         cmds.connectAttr(f"{dm}.outputTranslate", f"{db}.point{i + 1}")
     return db
 
 
 def connect_distance_to_sx(src1, src2, dest, src_attr1="translate", src_attr2="translate"):
-    db = create_node("distanceBetween", name=f"Db_{dest}")
+    db = _create_node("distanceBetween", name=f"Db_{dest}")
     cmds.connectAttr(f"{db}.distance", f"{dest}.scaleX")
     cmds.connectAttr(f"{src1}.{src_attr1}", f"{db}.point1")
     if src2:
@@ -1377,7 +1379,7 @@ def connect_same_attr(src: str, dest: str, attrs: list[str]) -> None:
 
 
 def connect_half_point(src1, src2, dest, src_attr1="translate", src_attr2="translate"):
-    pb = create_node("pairBlend", name=f"PB_{dest}")
+    pb = _create_node("pairBlend", name=f"PB_{dest}")
     cmds.setAttr(f"{pb}.weight", 0.5)
     cmds.connectAttr(f"{src1}.{src_attr1}", f"{pb}.inTranslate1")
     if src2:
@@ -1398,7 +1400,7 @@ def connect_equal_point(nodes, offset=True):
             pmas[i] = name
 
         else:
-            pmas[i] = create_node("plusMinusAverage", name=name)
+            pmas[i] = _create_node("plusMinusAverage", name=name)
             cmds.connectAttr(f"{node}.translate", f"{pmas[i]}.input3D[0]")
             cmds.connectAttr(f"{cmds.listRelatives(node, p=True)[0]}.translate", f"{pmas[i]}.input3D[1]")
 
@@ -1406,7 +1408,7 @@ def connect_equal_point(nodes, offset=True):
     w = weight
     for node in nodes[1:-1]:
         p = cmds.listRelatives(node, p=True)[0]
-        pb = create_node("pairBlend", name=f"Pb_{p}")
+        pb = _create_node("pairBlend", name=f"Pb_{p}")
         cmds.setAttr(f"{pb}.weight", w)
         w += weight
         if offset:
@@ -1446,7 +1448,7 @@ def connect_pair_blend(name: str="", weight: str|float=0.0, in_tl1: str="", in_t
         else:
             cmds.error("Unable to set name.")
 
-    pb = create_node("pairBlend", name=name)
+    pb = _create_node("pairBlend", name=name)
     cmds.setAttr(f"{pb}.rotInterpolation", 1)
 
     pb_tl1 = f"{pb}.inTranslate1"
@@ -1505,7 +1507,7 @@ def connect_float_math(name: str="", operation: int=0, fa: str|float=0.0, fb: st
     if not name:
         name = f"Fm_{out[0].split('.')[0]}"
 
-    fm = create_node("floatMath", name=name)
+    fm = _create_node("floatMath", name=name)
     cmds.setAttr(f"{fm}.operation", operation)
 
     fm_fa = f"{fm}.floatA"
@@ -1580,7 +1582,7 @@ def connect_multiply_divide(
             name = f"Md_{node}"
             break
 
-    md = create_node("multiplyDivide", name=name)
+    md = _create_node("multiplyDivide", name=name)
     cmds.setAttr(f"{md}.operation", operation)
 
     md_in1 = f"{md}.input1"
@@ -1670,7 +1672,7 @@ def connect_condition(
             name = f"Cd_{node}"
             break
 
-    cd = create_node("condition", name=name)
+    cd = _create_node("condition", name=name)
     cmds.setAttr(f"{cd}.operation", operation)
 
     srcs = [
@@ -1768,7 +1770,7 @@ def connect_compose_matrix(
             name = f"Cd_{node}"
             break
 
-    cm = create_node("composeMatrix", name=name)
+    cm = _create_node("composeMatrix", name=name)
     cmds.setAttr(f"{cm}.useEulerRotation", euler)
     cmds.setAttr(f"{cm}.inputRotateOrder", order)
 
@@ -1831,7 +1833,7 @@ def connect_switch_attr(dest_attr: str, true_attrs: list, false_attrs: list) -> 
     """
     dest = dest_attr.split(".")[0]
     if false_attrs:
-        rev = create_node("reverse", name=f"Rev_{dest}")
+        rev = _create_node("reverse", name=f"Rev_{dest}")
         cmds.connectAttr(dest_attr, f"{rev}.inputX")
         rev_attr = f"{rev}.outputX"
 
@@ -1975,3 +1977,25 @@ def get_mirror_names(names, side_list, side):
 
     else:
         return names
+
+
+def connect_ik_stretch_warning(nodes:list[str], max_dis:float, shapes:list[str]=[]) -> list[str]:
+    """
+    IKの伸び切りを検知してコントローラーの色を変更するリグを接続する関数
+    """
+
+    dm1 = create_node.decomposeMatrix(node_name=f"Dm_{nodes[1]}_IKSW_01", imat=f"{nodes[0]}.worldMatrix[0]")
+    dm2 = create_node.decomposeMatrix(node_name=f"Dm_{nodes[1]}_IKSW_02", imat=f"{nodes[1]}.worldMatrix[0]")
+    db = create_node.distanceBetween(node_name=f"Db_{nodes[1]}_IKSW", p1=f"{dm1}.outputTranslate", p2=f"{dm2}.outputTranslate")
+    cds = []
+    for shape in shapes:
+        cds = [create_node.condition(
+            node_name=f"Cd_{shape}_IKSW",
+            op=4,
+            ft=max_dis,
+            st=f"{db}.distance",
+            ctr=10,
+            cfr=cmds.getAttr(f"{shape}.lineWidth"),
+            ocr_dest=[f"{shape}.lineWidth"])]
+
+    return [dm1, dm2, db, cds]

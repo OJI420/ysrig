@@ -1,3 +1,3 @@
-+ ysrig 2.1.1 ./ysrig
++ ysrig 2.2.0 ./ysrig
 pluginPath: plug-ins
 PATH +:= scripts

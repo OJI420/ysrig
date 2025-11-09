@@ -118,20 +118,20 @@ class Rig(rig_base.RigBace):
         self.knee_line = core.connect_curve_point(f"CV_{self.grp_name}_Knee", [self.ik_joints[1], self.ctrls[-8]], parent=self.ctrl_grp, lc=self.connect_type)
 
         """
-        # self.ctrls
-        [0], [-13] -> Ctrl_L_UpperLeg
-        [1], [-12] -> Ctrl_L_ForeLeg
-        [2], [-11] -> Ctrl_L_Foot
-        [3], [-10] -> Ctrl_L_Toe
-        [4], [-9] -> Ctrl_L_TipToe
-        [5], [-8] -> Ctrl_L_Leg_PV
-        [6], [-7] -> Ctrl_L_Leg_IK
-        [7], [-6] -> Ctrl_L_Leg_REV_All
-        [8], [-5] -> Ctrl_L_Leg_REV_Heel
-        [9], [-4] -> Ctrl_L_Leg_REV_OutSide
-        [10], [-3] -> Ctrl_L_Leg_REV_InSide
-        [11], [-2] -> Ctrl_L_Leg_REV_TipToe
-        [12], [-1] -> Ctrl_L_Leg_REV_Toe
+        self.ctrls
+        [0] [-13] -> Ctrl_L_UpperLeg
+        [1] [-12] -> Ctrl_L_ForeLeg
+        [2] [-11] -> Ctrl_L_Foot
+        [3] [-10] -> Ctrl_L_Toe
+        [4] [-9] -> Ctrl_L_ToeSub
+        [5] [-8] -> Ctrl_L_Leg_PV
+        [6] [-7] -> Ctrl_L_Leg_IK
+        [7] [-6] -> Ctrl_L_Leg_REV_All
+        [8] [-5] -> Ctrl_L_Leg_REV_Heel
+        [9] [-4] -> Ctrl_L_Leg_REV_OutSide
+        [10] [-3] -> Ctrl_L_Leg_REV_InSide
+        [11] [-2] -> Ctrl_L_Leg_REV_ToeTip
+        [12] [-1] -> Ctrl_L_Leg_REV_Toe
         """
 
         """
@@ -257,6 +257,9 @@ class Rig(rig_base.RigBace):
         cd2 = core.connect_condition(name=f"Cd_{self.rev_toe_ctrls[-1]}_02", operation=3, ft=f"{self.ctrls[-6]}.rotateX", st=f"{self.ctrls[-6]}.ToeContactAngle", fr=f"{cd1}.outColorR", tr=f"{self.ctrls[-6]}.ToeContactAngle")
         fm = core.connect_float_math(name=f"Fm_{self.rev_toe_ctrls[-1]}", operation=2, fa=f"{cd2}.outColorR", fb=-1)
         core.connect_compose_matrix(name=f"Cm_{self.rev_toe_ctrls[-1]}", rz=f"{fm}.outFloat", out=[f"{self.rev_toe_ctrls[-1]}.offsetParentMatrix"])
+
+        # IKの伸び切りチェッカー
+        core.connect_ik_stretch_warning([self.ik_joints[0], self.hds[0]], cmds.getAttr(f"{self.ik_joints[1]}.tx") * 2, shapes=[self.ctrl_instances[-7].shape_node, self.ctrl_instances[-8].shape_node])
 
     def set_attr(self):
         cmds.setAttr(f"{self.settings_node}.IKFK", 0)

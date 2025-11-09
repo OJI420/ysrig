@@ -116,6 +116,9 @@ class Rig(rig_base.RigBace):
         dv = core.connect_matrix(self.ROOT_OFFSET_CTRL, self.ctrl_spaces[2], rt=True, lc=False)[1]
         core.connect_pair_blend(weight=f"{self.settings_node}.Hand_WL", in_rt1=f"{dv}.outputRotate", in_rt2=f"{dv}.outputRotate!", out_rt=f"{self.ctrl_spaces[2]}.rotate:XYZ")
 
+        # IKの伸び切りチェッカー
+        core.connect_ik_stretch_warning([self.ik_joints[0], self.hd], cmds.getAttr(f"{self.ik_joints[1]}.tx") * 2, shapes=[self.ctrl_instances[4].shape_node, self.ctrl_instances[5].shape_node])
+
 
     def set_attr(self):
         cmds.setAttr(f"{self.settings_node}.IKFK", 1)
