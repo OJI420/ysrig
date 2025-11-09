@@ -7,7 +7,7 @@ import maya.api.OpenMaya as om2
 from ysrig import create_node
 importlib.reload(create_node)
 
-VERSION = "2.2.0"
+VERSION = "2.2.1"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -1979,7 +1979,7 @@ def get_mirror_names(names, side_list, side):
         return names
 
 
-def connect_ik_stretch_warning(nodes:list[str], max_dis:float, shapes:list[str]=[]) -> list[str]:
+def connect_ik_stretch_warning(nodes:list[str], max_dis:float, ctrls:list[str]=[]) -> list[str]:
     """
     IKの伸び切りを検知してコントローラーの色を変更するリグを接続する関数
     """
@@ -1987,15 +1987,23 @@ def connect_ik_stretch_warning(nodes:list[str], max_dis:float, shapes:list[str]=
     dm1 = create_node.decomposeMatrix(node_name=f"Dm_{nodes[1]}_IKSW_01", imat=f"{nodes[0]}.worldMatrix[0]")
     dm2 = create_node.decomposeMatrix(node_name=f"Dm_{nodes[1]}_IKSW_02", imat=f"{nodes[1]}.worldMatrix[0]")
     db = create_node.distanceBetween(node_name=f"Db_{nodes[1]}_IKSW", p1=f"{dm1}.outputTranslate", p2=f"{dm2}.outputTranslate")
-    cds = []
-    for shape in shapes:
-        cds = [create_node.condition(
-            node_name=f"Cd_{shape}_IKSW",
-            op=4,
-            ft=max_dis,
-            st=f"{db}.distance",
-            ctr=10,
-            cfr=cmds.getAttr(f"{shape}.lineWidth"),
-            ocr_dest=[f"{shape}.lineWidth"])]
 
-    return [dm1, dm2, db, cds]
+    shapes = []
+    for ctrl in ctrls:
+        tmp = cmds.duplicate(ctrl)[0]
+        shape = cmds.listRelatives(tmp, s=True)[0]
+        cmds.setAttr(f"{shape}.lineWidth", 10)
+        cmds.parent(shape, ctrl, r=True, s=True)
+        cmds.delete(tmp)
+        shapes += [f"{shape}.visibility"]
+    
+    cd = create_node.condition(
+        node_name=f"Cd_{nodes[1]}_IKSW",
+        op=4,
+        ft=max_dis,
+        st=f"{db}.distance",
+        ctr=1,
+        cfr=0,
+        ocr_dest=shapes)
+
+    return [dm1, dm2, db, cd]

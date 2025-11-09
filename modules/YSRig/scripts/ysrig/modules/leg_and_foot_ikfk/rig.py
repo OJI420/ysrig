@@ -259,7 +259,7 @@ class Rig(rig_base.RigBace):
         core.connect_compose_matrix(name=f"Cm_{self.rev_toe_ctrls[-1]}", rz=f"{fm}.outFloat", out=[f"{self.rev_toe_ctrls[-1]}.offsetParentMatrix"])
 
         # IKの伸び切りチェッカー
-        core.connect_ik_stretch_warning([self.ik_joints[0], self.hds[0]], cmds.getAttr(f"{self.ik_joints[1]}.tx") * 2, shapes=[self.ctrl_instances[-7].shape_node, self.ctrl_instances[-8].shape_node])
+        core.connect_ik_stretch_warning([self.ik_joints[0], self.hds[0]], cmds.getAttr(f"{self.ik_joints[1]}.tx") * 2, ctrls=[self.ctrls[-8], self.ctrls[-7]])
 
     def set_attr(self):
         cmds.setAttr(f"{self.settings_node}.IKFK", 0)
