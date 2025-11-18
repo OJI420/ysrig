@@ -63,6 +63,7 @@ class Rig(rig_base.RigBace):
         self.rev_toe_ctrl_instances = [None] * len(self.base_joints[3:-1])
 
         toe_ctrls = core.convert_joint_to_controller(self.base_joints[3:-1], prefix="Ctrl_REV_FK_")
+        toe_ctrls = [cmds.rename(n, f"Ctrl_{self.grp_name}_REV_FK_{s}") for n, s in zip(toe_ctrls, ["Toe", "ToeSub"])]
         for i, ctrl, name in zip(range(len(toe_ctrls)), toe_ctrls, self.joint_names[3:-1]):
             c = core.CtrlCurve(f"{name}1", "BoundingBox")
 
@@ -117,20 +118,20 @@ class Rig(rig_base.RigBace):
         self.knee_line = core.connect_curve_point(f"CV_{self.grp_name}_Knee", [self.ik_joints[1], self.ctrls[-8]], parent=self.ctrl_grp, lc=self.connect_type)
 
         """
-        # self.ctrls
-        [0], [-13] -> Ctrl_L_UpperLeg
-        [1], [-12] -> Ctrl_L_ForeLeg
-        [2], [-11] -> Ctrl_L_Foot
-        [3], [-10] -> Ctrl_L_Toe
-        [4], [-9] -> Ctrl_L_TipToe
-        [5], [-8] -> Ctrl_L_Leg_PV
-        [6], [-7] -> Ctrl_L_Leg_IK
-        [7], [-6] -> Ctrl_L_Leg_REV_All
-        [8], [-5] -> Ctrl_L_Leg_REV_Heel
-        [9], [-4] -> Ctrl_L_Leg_REV_OutSide
-        [10], [-3] -> Ctrl_L_Leg_REV_InSide
-        [11], [-2] -> Ctrl_L_Leg_REV_TipToe
-        [12], [-1] -> Ctrl_L_Leg_REV_Toe
+        self.ctrls
+        [0] [-13] -> Ctrl_L_UpperLeg
+        [1] [-12] -> Ctrl_L_ForeLeg
+        [2] [-11] -> Ctrl_L_Foot
+        [3] [-10] -> Ctrl_L_Toe
+        [4] [-9] -> Ctrl_L_ToeSub
+        [5] [-8] -> Ctrl_L_Leg_PV
+        [6] [-7] -> Ctrl_L_Leg_IK
+        [7] [-6] -> Ctrl_L_Leg_REV_All
+        [8] [-5] -> Ctrl_L_Leg_REV_Heel
+        [9] [-4] -> Ctrl_L_Leg_REV_OutSide
+        [10] [-3] -> Ctrl_L_Leg_REV_InSide
+        [11] [-2] -> Ctrl_L_Leg_REV_ToeTip
+        [12] [-1] -> Ctrl_L_Leg_REV_Toe
         """
 
         """
@@ -257,6 +258,9 @@ class Rig(rig_base.RigBace):
         fm = core.connect_float_math(name=f"Fm_{self.rev_toe_ctrls[-1]}", operation=2, fa=f"{cd2}.outColorR", fb=-1)
         core.connect_compose_matrix(name=f"Cm_{self.rev_toe_ctrls[-1]}", rz=f"{fm}.outFloat", out=[f"{self.rev_toe_ctrls[-1]}.offsetParentMatrix"])
 
+        # IKの伸び切りチェッカー
+        core.connect_ik_stretch_warning([self.ik_joints[0], self.hds[0]], cmds.getAttr(f"{self.ik_joints[1]}.tx") * 2, ctrls=[self.ctrls[-8], self.ctrls[-7]])
+
     def set_attr(self):
         cmds.setAttr(f"{self.settings_node}.IKFK", 0)
         cmds.setAttr(f"{self.settings_node}.FK_WL", 1)
@@ -315,7 +319,7 @@ class RigMirror(Rig):
         self.build, self.side, self.grp_name, self.joint_names = rig_base.get_mirror_names(self.side, self.grp_name, self.joint_names)
 
     def create(self):
-        fk_ctrls = core.convert_joint_to_controller(self.src_joints[:-1], sr=[self.src_side, self.side])
+        fk_ctrls = core.convert_joint_to_controller(self.src_joints[:-1], sr=[f"{self.src_side}_", f"{self.side}_"])
         self.ctrls = [None] * (len(fk_ctrls) + 8)
         self.ctrl_instances = [None] * (len(fk_ctrls) + 8)
 
@@ -366,7 +370,8 @@ class RigMirror(Rig):
         self.rev_toe_ctrls = [None] * len(self.base_joints[3:-1])
         self.rev_toe_ctrl_instances = [None] * len(self.base_joints[3:-1])
 
-        toe_ctrls = core.convert_joint_to_controller(self.src_joints[3:-1], prefix="Ctrl_REV_FK_", sr=[self.src_side, self.side])
+        toe_ctrls = core.convert_joint_to_controller(self.src_joints[3:-1], prefix="Ctrl_REV_FK_", sr=[f"{self.src_side}_", f"{self.side}_"])
+        toe_ctrls = [cmds.rename(n, f"Ctrl_{self.grp_name}_REV_FK_{s}") for n, s in zip(toe_ctrls, ["Toe", "ToeSub"])]
         for i, ctrl, name in zip(range(len(toe_ctrls)), toe_ctrls, self.joint_names[3:-1]):
             c = core.CtrlCurve(f"{name}1", "BoundingBox")
 
@@ -374,7 +379,7 @@ class RigMirror(Rig):
             self.rev_toe_ctrl_instances[i] = c
             self.rev_toe_ctrls[i] = c.parent_node
 
-        for suffix, mat in zip(["Heel", "OutSide", "InSide", "TipToe", "Toe"], self.ctrl_space_matrices[-5:]):
+        for suffix, mat in zip(["Heel", "OutSide", "InSide", "ToeTip", "Toe"], self.ctrl_space_matrices[-5:]):
             ctrl = core.CtrlCurve(f"{self.grp_name}_REV_{suffix}", "Rev")
             pos, rot = core.decompose_matrix(mat)[:-1]
             cmds.setAttr(f"{ctrl.parent_node}.translate", *pos)
@@ -388,7 +393,7 @@ class RigMirror(Rig):
 
         self.hds = [None] * 3
 
-        self.ik_joints = core.convert_joint_to_controller(self.src_joints, prefix="Ikjt_", sr=[self.src_side, self.side])
+        self.ik_joints = core.convert_joint_to_controller(self.src_joints, prefix="Ikjt_", sr=[f"{self.src_side}_", f"{self.side}_"])
         self.hds[0], ef = cmds.ikHandle(sj=self.ik_joints[0], ee=self.ik_joints[2], name=f"Ikhandle_{self.grp_name}")
         self.hds[1], ef = cmds.ikHandle(sj=self.ik_joints[3], ee=self.ik_joints[4], sol="ikSCsolver", name=f"Ikhandle_{self.grp_name}_Toe")
         self.hds[2], ef = cmds.ikHandle(sj=self.ik_joints[2], ee=self.ik_joints[3], sol="ikSCsolver", name=f"Ikhandle_{self.grp_name}_Foot")

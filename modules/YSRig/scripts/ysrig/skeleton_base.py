@@ -40,7 +40,7 @@ class SkeletonBase:
         self.guides_world_matrix = core.get_list_attributes(self.meta_node, "GuidesWorldMatrix")
         self.create_goal_bone = cmds.getAttr(f"{self.meta_node}.GoalBone")
 
-        self.skeleton_grp = core.get_skeleton_group()
+        self.skeleton_grp = core.SKELETON_GROUP_NAME
 
     def setup(self):
         pass
@@ -137,13 +137,13 @@ class SkeletonBase:
 class facialSkeletonBase(SkeletonBase):
     def _setup(self, meta_node):
         super()._setup(meta_node)
-        self.skeleton_grp = f"JT_{core.get_facials_root()}"
+        self.skeleton_grp = f"JT_{core.FACIALS_ROOT_NAME}"
 
 
 def main():
     cmds.undoInfo(ock=True)
 
-    facials_root = f"JT_{core.get_facials_root()}"
+    facials_root = f"JT_{core.FACIALS_ROOT_NAME}"
     meta_nodes = core.get_meta_nodes()
     facial_meta_nodes = core.get_facial_meta_nodes()
     facial_root_parent_name = cmds.getAttr(f"{meta_nodes[0]}.FacialRootName")
@@ -193,7 +193,7 @@ def main():
                 cmds.matchTransform(facials_root, facial_root_parent, pos=True, rot=True)
                 cmds.makeIdentity(facials_root, a=True)
             else:
-                cmds.parent(facials_root, core.get_skeleton_group())
+                cmds.parent(facials_root, core.SKELETON_GROUP_NAME)
 
         # facialモジュールのメタノードを読み込んでインスタンスを作る
         for i, meta in enumerate(facial_meta_nodes):

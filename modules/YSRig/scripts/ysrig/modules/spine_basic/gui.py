@@ -9,7 +9,7 @@ class Gui(gui_base.GuiBase):
         self.widget["HipJointName"] = gui_base.YSLineEdit(label="★ Hip Joint Name", placeholder_text="Hip")
 
         self.widget["Frame2"] = gui_base.YSFrame(label="Skeleton")
-        self.widget["JointCount"] = gui_base.YSDoubleSpinBox(label="★ Spine Joint Count", range=[1, 99], decimals=0, step=1)
+        self.widget["JointCount"] = gui_base.YSDoubleSpinBox(label="★ Spine Joint Count", range=[1, 9], decimals=0, step=1)
 
         self.widget["Frame4"] = gui_base.YSFrame(label="Rig")
         self.widget["Translate"] = gui_base.YSCheckBox(label="Translate Enabled")

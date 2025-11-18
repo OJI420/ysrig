@@ -12,7 +12,7 @@ class Gui(gui_base.facialGuiBase):
         guide = self.klass(
             self.widget["GroupName"].get(),
             2,
-            core.get_facials_root(),
+            core.FACIALS_ROOT_NAME,
             "",
             [
                 f'L_{self.widget["EyeName"].get()}',

@@ -152,8 +152,8 @@ class Guide(guide_base.GuideBase):
             cmds.connectAttr(f"{self.root_joint}.UniformScale", f"{self.root_joint}.scale{axis}")
 
         if self.carpal:
-            wam = core.create_node("wtAddMatrix", name=f"Wam_{self.metacarpal_target}")
-            dm = core.create_node("decomposeMatrix", name=f"Dm{self.metacarpal_target}")
+            wam = core._create_node("wtAddMatrix", name=f"Wam_{self.metacarpal_target}")
+            dm = core._create_node("decomposeMatrix", name=f"Dm{self.metacarpal_target}")
             cmds.connectAttr(f"{wam}.matrixSum", f"{dm}.inputMatrix")
             cmds.connectAttr(f"{dm}.outputTranslate", f"{self.metacarpal_target}.translate")
             wt = 1 / self.metacarpal_children_count

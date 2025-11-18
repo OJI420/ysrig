@@ -87,7 +87,7 @@ class CtrlBace:
         grp = cmds.rename(grp, f"CtrlEdit_{self.grp_name}_Group")
         
         cmds.addAttr(grp, ln="YSNodeLabel", dt="string")
-        cmds.setAttr(f"{grp}.YSNodeLabel", core.get_controller_edit_module_group(), type="string")
+        cmds.setAttr(f"{grp}.YSNodeLabel", core.CTRL_EDIT_MODULES_GROUP_NAME, type="string")
         cmds.setAttr(f"{grp}.YSNodeLabel", l=True)
         
         for axis in "XYZ":
@@ -98,7 +98,7 @@ class CtrlBace:
         core.set_outliner_color(grp, [0.6, 1.0, 1.0])
         self.grp = grp
         self.settings_node = lc
-        cmds.parent(self.grp, core.get_controller_edit_group())
+        cmds.parent(self.grp, core.CTRL_EDIT_GROUP_NAME)
 
     def pre_process(self):
         pass

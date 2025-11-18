@@ -6,8 +6,8 @@ reload(ctrl_base)
 
 class Ctrl(ctrl_base.CtrlBace):
     def _create_grp(self):
-        ctrl_grp = core.create_labeled_node("transform", core.get_controller_edit_group(), name=core.get_controller_edit_group())
-        cmds.parent(ctrl_grp, core.get_root_group())
+        ctrl_grp = core.create_labeled_node("transform", core.CTRL_EDIT_GROUP_NAME, name=core.CTRL_EDIT_GROUP_NAME)
+        cmds.parent(ctrl_grp, core.YSRIG_GROUP_NAME)
         super()._create_grp()
 
     def create(self):

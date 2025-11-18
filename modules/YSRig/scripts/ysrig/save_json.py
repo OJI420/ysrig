@@ -34,15 +34,22 @@ def save_button_shape():
     sels = cmds.ls(sl=True)
     for sel in sels:
         mod[sel] = {}
-        shapes = cmds.listRelatives(sel, c=True)
-        for shape in shapes:
-            mod[sel][shape] = {}
-            mod[sel][shape]["pos"] = [cmds.getAttr(f"{shape}.translateX"), cmds.getAttr(f"{shape}.translateZ")]
-            mod[sel][shape]["cvs"] = []
+        shape_types = cmds.listRelatives(sel, c=True)
+        for shape_type in shape_types:
+            key = shape_type.replace(f"{sel}_", "")
+            mod[sel][key] = {}
+            shapes = cmds.listRelatives(shape_type, c=True)
+            for shape in shapes:
+                k = shape.replace(f"{shape_type}_", "")
+                mod[sel][key][k] = {}
+                mod[sel][key][k]["pos"] = {"x": cmds.getAttr(f"{shape}.translateX"), "y": cmds.getAttr(f"{shape}.translateZ")}
+                mod[sel][key][k]["cvs"] = []
 
-            cv = cmds.listRelatives(shape, s=True)[0]
-            for i in range(cmds.getAttr(f"{cv}.controlPoints", size=True)):
-                mod[sel][shape]["cvs"] += [cmds.getAttr(f"{cv}.controlPoints[{i}]")[0]]
+                cv = cmds.listRelatives(shape, s=True)[0]
+                for i in range(cmds.getAttr(f"{cv}.controlPoints", size=True)):
+                    pos = cmds.getAttr(f"{cv}.controlPoints[{i}]")[0]
+                    pos = [pos[0], pos[2]]
+                    mod[sel][key][k]["cvs"] += [pos]
 
     with open(savefile, "w") as f:
         json.dump(mod, f, indent=4)

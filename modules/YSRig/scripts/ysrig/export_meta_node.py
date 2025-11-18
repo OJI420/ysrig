@@ -28,13 +28,13 @@ def get_meta_data():
 
         modules[meta_node] = data
 
-    modules["FacialRootName"] = cmds.getAttr(f"{core.get_guide_facials_group()}.FacialRootName")
+    modules["FacialRootName"] = cmds.getAttr(f"{core.GUIDE_FACIALS_GROUP_NAME}.FacialRootName")
 
     return modules
 
 
 def main():
-    if not cmds.objExists(core.get_guide_group()):
+    if not cmds.objExists(core.GUIDE_GROUP_NAME):
         MGlobal.displayError("ガイドが見つかりませんでした")
         return
 

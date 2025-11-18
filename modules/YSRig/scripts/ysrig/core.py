@@ -1,11 +1,13 @@
 import os
 import json
 import math
+import importlib
 from maya import cmds, mel
 import maya.api.OpenMaya as om2
+from ysrig import create_node
+importlib.reload(create_node)
 
-
-VERSION = "2.1.0"
+VERSION = "2.2.2"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -221,35 +223,18 @@ class Hierarchy:
 
 
 ###  固定の名前　###
-def get_root_group():
-    return "Rig_Group"
-
-def get_guide_group():
-    return "Guide_Group"
-
-def get_guide_modules_group():
-    return "Guide_Modules_Group"
-
-def get_guide_facials_group():
-    return "Guide_Facials_Group"
-
-def get_skeleton_group():
-    return "Skeleton_Group"
-
-def get_facials_root():
-    return "Facial"
-
-def get_controller_edit_group():
-    return "ControllerEdit_Group"
-
-def get_controller_edit_module_group():
-    return "ControllerEdit_Module_Group"
-
-def get_rig_group():
-    return "Controller_Group"
-
-def get_rig_module_group():
-    return "Controller_Module_Group"
+YSRIG_GROUP_NAME = "Rig_Group"
+GUIDE_GROUP_NAME = "Guide_Group"
+GUIDE_MODULES_GROUP_NAME = "Guide_Module_Group"
+GUIDE_FACIALS_GROUP_NAME = "Guide_Facial_Group"
+SKELETON_GROUP_NAME = "Skeleton_Group"
+FACIALS_ROOT_NAME = "Facial"
+CTRL_EDIT_GROUP_NAME = "ControllerEdit_Group"
+CTRL_EDIT_MODULES_GROUP_NAME = "ControllerEdit_Module_Group"
+RIG_GROUP_NAME = "Controller_Group"
+RIG_MODULES_GROUP_NAME = "Controller_Module_Group"
+PICKER_GROUP_NAME = "Picker_Group"
+PICKER_MODULES_NAME = "Picker_Module"
 
 ###################
 
@@ -383,7 +368,7 @@ def create_labeled_node(node_type, ysnode_type, name=""):
     return node
 
 
-def create_node(node_type, name=""):
+def _create_node(node_type, name=""):
     if not name:
         name = node_type
 
@@ -458,7 +443,7 @@ def create_guide_node(name):
 
 
 def create_rig_grp():
-    rig_grp = create_labeled_node("transform", get_root_group(), name=get_root_group())
+    rig_grp = create_labeled_node("transform", YSRIG_GROUP_NAME, name=YSRIG_GROUP_NAME)
     set_outliner_color(rig_grp, [1.0, 1.0, 1.0])
     cmds.addAttr(rig_grp, ln="YSRigVersion", dt="string")
     cmds.addAttr(rig_grp, ln="BuildType", dt="string")
@@ -529,14 +514,14 @@ def connect_curve_point(name, nodes: list, parent: str="", lc: bool=False) -> li
         cmds.makeIdentity(curve)
 
     for i, node in enumerate(nodes):
-        mm = create_node("multMatrix", name=f"Mm_{curve}_{i + 1}")
+        mm = _create_node("multMatrix", name=f"Mm_{curve}_{i + 1}")
         if lc:
             connect_local_matrix_to_mm(node, curve, mm, start=0)
 
         else:
             connect_world_matrix_to_mm(node, curve, mm, start=0)
 
-        dm = create_node("decomposeMatrix", name=f"Dm_{curve}_{i + 1}")
+        dm = _create_node("decomposeMatrix", name=f"Dm_{curve}_{i + 1}")
         cmds.connectAttr(f"{mm}.matrixSum", f"{dm}.inputMatrix")
         cmds.connectAttr(f"{dm}.outputTranslate", f"{shape}.controlPoints[{i}]")
 
@@ -631,8 +616,8 @@ def get_enum_attribute(node, attr):
 
 
 def get_meta_nodes():
-    guide_group = get_guide_group()
-    guide_modules_group = get_guide_modules_group()
+    guide_group = GUIDE_GROUP_NAME
+    guide_modules_group = GUIDE_MODULES_GROUP_NAME
 
     if not cmds.objExists(guide_group):
         return []
@@ -648,7 +633,7 @@ def get_meta_nodes():
     meta_nodes[0] = cmds.listConnections(root_settings, s=False, d=True, type="network")[0]
 
     for i, module in enumerate(guide_modules):
-        if module == get_guide_facials_group():
+        if module == GUIDE_FACIALS_GROUP_NAME:
             continue
         
         settings = cmds.listRelatives(module, s=True)[0]
@@ -658,7 +643,7 @@ def get_meta_nodes():
 
 
 def get_facial_meta_nodes():
-    guide_facials_group = get_guide_facials_group()
+    guide_facials_group = GUIDE_FACIALS_GROUP_NAME
 
     if not cmds.objExists(guide_facials_group):
         return []
@@ -670,7 +655,7 @@ def get_facial_meta_nodes():
     meta_nodes = [None] * modules_count
 
     for i, module in enumerate(guide_modules):
-        if module == get_guide_facials_group():
+        if module == GUIDE_FACIALS_GROUP_NAME:
             continue
         
         settings = cmds.listRelatives(module, s=True)[0]
@@ -859,7 +844,7 @@ def dict_to_attr(node: str, dict: dict) -> None:
 
     データがリスト型の場合、multi型アトリビュートとして設定する
 
-    データがタプル型の場合、matirxとして処理する
+    データがタプル型の場合、vectorやmatirxとして処理する
 
     Args:
         node (str): アトリビュートを設定するノード名
@@ -937,6 +922,22 @@ def dict_to_attr(node: str, dict: dict) -> None:
 
         cmds.setAttr(f"{node}.{key}", data, type="matrix", l=True)
 
+    def double2_attr(key, data): # double2型の静的アトリビュート
+        if check_attr(key):
+            cmds.addAttr(node, ln=key, at="double2")
+            for axis in "XY":
+                cmds.addAttr(node, ln=f"{key}{axis}", at="double", p=key)
+
+        cmds.setAttr(f"{node}.{key}", *data, l=True)
+
+    def double3_attr(key, data): # double3型の静的アトリビュート
+        if check_attr(key):
+            cmds.addAttr(node, ln=key, at="double3")
+            for axis in "XYZ":
+                cmds.addAttr(node, ln=f"{key}{axis}", at="double", p=key)
+
+        cmds.setAttr(f"{node}.{key}", *data, l=True)
+
     ### 静的な複数アトリビュート ###
 
     def list_of_str_attr(key, data): # 文字列のリスト型静的アトリビュート
@@ -974,6 +975,24 @@ def dict_to_attr(node: str, dict: dict) -> None:
         for i, d in enumerate(data):
             cmds.setAttr(f"{node}.{key}[{i}]", d, type="matrix", l=True)
 
+    def list_of_double2_attr(key, data): # double2のリスト型静的アトリビュート
+        if check_list_attr(key):
+            cmds.addAttr(node, ln=key, at="double2", multi=True)
+            for axis in "XY":
+                cmds.addAttr(node, ln=f"{key}{axis}", at="double", p=key)
+
+        for i, d in enumerate(data):
+            cmds.setAttr(f"{node}.{key}[{i}]", *d, l=True)
+
+    def list_of_double3_attr(key, data): # double2のリスト型静的アトリビュート
+        if check_list_attr(key):
+            cmds.addAttr(node, ln=key, at="double3", multi=True)
+            for axis in "XYZ":
+                cmds.addAttr(node, ln=f"{key}{axis}", at="double", p=key)
+
+        for i, d in enumerate(data):
+            cmds.setAttr(f"{node}.{key}[{i}]", *d, l=True)
+
     # addAttrでdtの引数で設定されるアトリビュート型
     DT_TYPES = {
         "string", "matrix", "double3", "float3", "double2", "float2",
@@ -997,7 +1016,10 @@ def dict_to_attr(node: str, dict: dict) -> None:
             else:
                 cmds.addAttr(node, ln=key, at=attr_type)
 
-        cmds.connectAttr(data, f"{node}.{key}")
+        if [data] == cmds.listConnections(f"{node}.{key}", s=True, d=False, p=True):
+            return
+
+        cmds.connectAttr(data, f"{node}.{key}", f=True)
         cmds.setAttr(f"{node}.{key}", l=True)
 
     ### 動的な複数アトリビュート ###
@@ -1011,7 +1033,10 @@ def dict_to_attr(node: str, dict: dict) -> None:
                 cmds.addAttr(node, ln=key, at=attr_type, multi=True)
 
         for i, d in enumerate(data):
-            cmds.connectAttr(d, f"{node}.{key}[{i}]")
+            if [d] == cmds.listConnections(f"{node}.{key}[{i}]", s=True, d=False, p=True):
+                continue
+
+            cmds.connectAttr(d, f"{node}.{key}[{i}]", f=True)
             cmds.setAttr(f"{node}.{key}[{i}]", l=True)
 
     for key in dict:
@@ -1027,7 +1052,14 @@ def dict_to_attr(node: str, dict: dict) -> None:
                     list_of_str_attr(key, data)
 
             elif isinstance(d, tuple):
-                list_of_matrix_attr(key, data)
+                if len(d) == 2:
+                    list_of_double2_attr(key, data)
+
+                elif len(d) == 3:
+                    list_of_double3_attr(key, data)
+
+                else:
+                    list_of_matrix_attr(key, data)
 
             elif isinstance(d, float):
                 list_of_float_attr(key, data)
@@ -1048,7 +1080,14 @@ def dict_to_attr(node: str, dict: dict) -> None:
                     str_attr(key, data)
 
             elif isinstance(data, tuple):
-                matrix_attr(key, data)
+                if len(data) == 2:
+                    double2_attr(key, data)
+
+                elif len(data) == 3:
+                    double3_attr(key, data)
+
+                else:
+                    matrix_attr(key, data)
 
             elif isinstance(data, float):
                 float_attr(key, data)
@@ -1168,7 +1207,7 @@ def connect_matrix(src: str, dest: str, tl: bool=False, rt: bool=False, sc: bool
     Returns:
         list : 作成されたノードのリスト [mm_node, dm_node, mm_rot_node, dm_rot_node]
     """
-    mm_node = create_node("multMatrix", name=f"Mm_{dest}{suffix}")
+    mm_node = _create_node("multMatrix", name=f"Mm_{dest}{suffix}")
     cmds.setAttr(f"{mm_node}.matrixIn[0]", get_offset_matrix(src, dest), type="matrix")
     if lc:
         index = connect_local_matrix_to_mm(src, dest, mm_node)
@@ -1185,7 +1224,7 @@ def connect_matrix(src: str, dest: str, tl: bool=False, rt: bool=False, sc: bool
         cmds.setAttr(f"{mm_node}.matrixIn[{index}]", cmds.getAttr(f"{tmp_im}.outputMatrix"), type="matrix")
         cmds.delete(tmp_cm, tmp_im)
 
-    dm_node = create_node("decomposeMatrix", name=f"Dm_{dest}{suffix}")
+    dm_node = _create_node("decomposeMatrix", name=f"Dm_{dest}{suffix}")
     cmds.connectAttr(f"{mm_node}.matrixSum", f"{dm_node}.inputMatrix")
 
     mm_rot_node = None
@@ -1244,16 +1283,16 @@ def connect_uniform_scale(node):
 
 
 def connect_world_distance_node(node1, node2):
-    db = create_node("distanceBetween", name=f"Db_{node1}_{node2}")
+    db = _create_node("distanceBetween", name=f"Db_{node1}_{node2}")
     for i, node in enumerate([node1, node2]):
-        dm = create_node("decomposeMatrix", name=f"Dm_{db}_0{i + 1}")
+        dm = _create_node("decomposeMatrix", name=f"Dm_{db}_0{i + 1}")
         cmds.connectAttr(f"{node}.worldMatrix[0]", f"{dm}.inputMatrix")
         cmds.connectAttr(f"{dm}.outputTranslate", f"{db}.point{i + 1}")
     return db
 
 
 def connect_distance_to_sx(src1, src2, dest, src_attr1="translate", src_attr2="translate"):
-    db = create_node("distanceBetween", name=f"Db_{dest}")
+    db = _create_node("distanceBetween", name=f"Db_{dest}")
     cmds.connectAttr(f"{db}.distance", f"{dest}.scaleX")
     cmds.connectAttr(f"{src1}.{src_attr1}", f"{db}.point1")
     if src2:
@@ -1377,7 +1416,7 @@ def connect_same_attr(src: str, dest: str, attrs: list[str]) -> None:
 
 
 def connect_half_point(src1, src2, dest, src_attr1="translate", src_attr2="translate"):
-    pb = create_node("pairBlend", name=f"PB_{dest}")
+    pb = _create_node("pairBlend", name=f"PB_{dest}")
     cmds.setAttr(f"{pb}.weight", 0.5)
     cmds.connectAttr(f"{src1}.{src_attr1}", f"{pb}.inTranslate1")
     if src2:
@@ -1398,7 +1437,7 @@ def connect_equal_point(nodes, offset=True):
             pmas[i] = name
 
         else:
-            pmas[i] = create_node("plusMinusAverage", name=name)
+            pmas[i] = _create_node("plusMinusAverage", name=name)
             cmds.connectAttr(f"{node}.translate", f"{pmas[i]}.input3D[0]")
             cmds.connectAttr(f"{cmds.listRelatives(node, p=True)[0]}.translate", f"{pmas[i]}.input3D[1]")
 
@@ -1406,7 +1445,7 @@ def connect_equal_point(nodes, offset=True):
     w = weight
     for node in nodes[1:-1]:
         p = cmds.listRelatives(node, p=True)[0]
-        pb = create_node("pairBlend", name=f"Pb_{p}")
+        pb = _create_node("pairBlend", name=f"Pb_{p}")
         cmds.setAttr(f"{pb}.weight", w)
         w += weight
         if offset:
@@ -1446,7 +1485,7 @@ def connect_pair_blend(name: str="", weight: str|float=0.0, in_tl1: str="", in_t
         else:
             cmds.error("Unable to set name.")
 
-    pb = create_node("pairBlend", name=name)
+    pb = _create_node("pairBlend", name=name)
     cmds.setAttr(f"{pb}.rotInterpolation", 1)
 
     pb_tl1 = f"{pb}.inTranslate1"
@@ -1505,7 +1544,7 @@ def connect_float_math(name: str="", operation: int=0, fa: str|float=0.0, fb: st
     if not name:
         name = f"Fm_{out[0].split('.')[0]}"
 
-    fm = create_node("floatMath", name=name)
+    fm = _create_node("floatMath", name=name)
     cmds.setAttr(f"{fm}.operation", operation)
 
     fm_fa = f"{fm}.floatA"
@@ -1580,7 +1619,7 @@ def connect_multiply_divide(
             name = f"Md_{node}"
             break
 
-    md = create_node("multiplyDivide", name=name)
+    md = _create_node("multiplyDivide", name=name)
     cmds.setAttr(f"{md}.operation", operation)
 
     md_in1 = f"{md}.input1"
@@ -1670,7 +1709,7 @@ def connect_condition(
             name = f"Cd_{node}"
             break
 
-    cd = create_node("condition", name=name)
+    cd = _create_node("condition", name=name)
     cmds.setAttr(f"{cd}.operation", operation)
 
     srcs = [
@@ -1768,7 +1807,7 @@ def connect_compose_matrix(
             name = f"Cd_{node}"
             break
 
-    cm = create_node("composeMatrix", name=name)
+    cm = _create_node("composeMatrix", name=name)
     cmds.setAttr(f"{cm}.useEulerRotation", euler)
     cmds.setAttr(f"{cm}.inputRotateOrder", order)
 
@@ -1831,7 +1870,7 @@ def connect_switch_attr(dest_attr: str, true_attrs: list, false_attrs: list) -> 
     """
     dest = dest_attr.split(".")[0]
     if false_attrs:
-        rev = create_node("reverse", name=f"Rev_{dest}")
+        rev = _create_node("reverse", name=f"Rev_{dest}")
         cmds.connectAttr(dest_attr, f"{rev}.inputX")
         rev_attr = f"{rev}.outputX"
 
@@ -1937,3 +1976,84 @@ def set_vtx_average_point(guide: str) -> list[float]:
     pos = [sum(p) / len(p) for p in zip(*pos)]
 
     cmds.move(*pos, guide, ws=True)
+
+
+def get_ctrl_color_code(name: str) -> str:
+    """
+    コントローラーのシェイプカラーをカラーコードで返す関数
+    """
+    name = f"Ctrl_{name}"
+    if not cmds.objExists(name):
+        return [0, 0, 0]
+
+    shape = cmds.listRelatives(name, s=True)[0]
+    rgb = cmds.getAttr(f"{shape}.overrideColorRGB")[0]
+    rgb = [int(c*255) for c in rgb]
+
+    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+
+
+def get_mirror_side(meta_node: str):
+    grp: str = cmds.getAttr(f"{meta_node}.GroupName")
+    mirror = cmds.getAttr(f"{meta_node}.Mirror")
+    primary_side = cmds.getAttr(f"{meta_node}.Side")
+
+    if not primary_side or not mirror:
+        return False, [None], [grp]
+
+    if primary_side == "L":
+        return True, ["L", "R"], [grp, grp.replace("L_", "R_")]
+
+    if primary_side == "R":
+        return True, ["R", "L"], [grp, grp.replace("R_", "L_")]
+
+
+def get_mirror_names(names, side_list, side):
+    if len(side_list) == 1:
+        return names
+
+    if side == side_list[1]:
+        return [name.replace(f"{side_list[0]}_", f"{side}_") for name in names]
+
+    else:
+        return names
+
+
+def connect_ik_stretch_warning(nodes:list[str], max_dis:float, ctrls:list[str]=[]) -> list[str]:
+    """
+    IKの伸び切りを検知してコントローラーの色を変更するリグを接続する関数
+    """
+
+    dm1 = create_node.decomposeMatrix(node_name=f"Dm_{nodes[1]}_IKSW_01", imat=f"{nodes[0]}.worldMatrix[0]")
+    dm2 = create_node.decomposeMatrix(node_name=f"Dm_{nodes[1]}_IKSW_02", imat=f"{nodes[1]}.worldMatrix[0]")
+    db = create_node.distanceBetween(node_name=f"Db_{nodes[1]}_IKSW", p1=f"{dm1}.outputTranslate", p2=f"{dm2}.outputTranslate")
+
+    shapes = []
+    for ctrl in ctrls:
+        tmp = cmds.duplicate(ctrl)[0]
+        shape = cmds.listRelatives(tmp, s=True)[0]
+        cmds.setAttr(f"{shape}.lineWidth", 10)
+        cmds.parent(shape, ctrl, r=True, s=True)
+        cmds.delete(tmp)
+        shapes += [f"{shape}.visibility"]
+    
+    cd = create_node.condition(
+        node_name=f"Cd_{nodes[1]}_IKSW",
+        op=4,
+        ft=max_dis,
+        st=f"{db}.distance",
+        ctr=1,
+        cfr=0,
+        ocr_dest=shapes)
+
+    return [dm1, dm2, db, cd]
+
+
+def delete_meta_node(meta_node):
+    if cmds.objExists(f"{meta_node}.PickerData"):
+        for i in range(cmds.getAttr(f"{meta_node}.PickerData", size=True)):
+            nodes = cmds.listConnections(f"{meta_node}.PickerData[{i}]", s=True, d=False) or []
+            for node in nodes:
+                cmds.delete(node)
+
+    cmds.delete(meta_node)

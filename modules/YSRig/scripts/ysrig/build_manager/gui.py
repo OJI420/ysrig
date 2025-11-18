@@ -15,6 +15,28 @@ if int(gui_base.ver) <= 2024:
 elif int(gui_base.ver) >= 2025:
     from PySide6 import QtWidgets, QtCore
 
+
+def get_style(bc:str, sc:str) -> str:
+    base = [float(c) for c in bc.split(", ")]
+    hover = [float(c)+10 for c in bc.split(", ")]
+    pressed = [float(c)-10 for c in bc.split(", ")]
+    style = f"""
+        QPushButton {{
+            background-color: rgb({base[0]}, {base[1]}, {base[2]});
+            color: rgb({sc});
+            border-radius: 15px;
+            padding: 5px;
+        }}
+        QPushButton:hover {{
+            background-color: rgb({hover[0]}, {hover[1]}, {hover[2]});
+        }}
+        QPushButton:pressed {{
+            background-color: rgb({pressed[0]}, {pressed[1]}, {pressed[2]});
+        }}
+        """
+    return style
+
+
 class Gui(QtWidgets.QWidget):
     def __init__(self):
         super().__init__(gui_base.maya_main_window)
@@ -33,7 +55,7 @@ class Gui(QtWidgets.QWidget):
         self.title = "Build Manager"
         self.file_path = ""
         self.dir_path = ""
-        self.facial_root_joint = cmds.getAttr(f"{core.get_guide_facials_group()}.FacialRootName")
+        self.facial_root_joint = cmds.getAttr(f"{core.GUIDE_FACIALS_GROUP_NAME}.FacialRootName")
         self.help_window = None
         self.pre_widget = {}
         self.widget = {}
@@ -89,7 +111,7 @@ class Gui(QtWidgets.QWidget):
 
         self.main_layout.addLayout(sub_layout)
 
-        frame = Guide_Frame("Guide", core.get_guide_group(), None, remove_guide)
+        frame = Guide_Frame("Guide", core.GUIDE_GROUP_NAME, None, remove_guide)
         self.main_layout.addWidget(frame)
 
     def help(self):
@@ -171,9 +193,9 @@ class Gui(QtWidgets.QWidget):
             self.dyn_widget[attr].connect(lambda _, a=attr, w=self.dyn_widget[attr]: self.set_setting(w, a))
 
     def build_manager(self):
-        self.build_widget["Skeleton"] = BuildManager("Skeleton", core.get_skeleton_group(), build_skeleton, remove_skeleton)
-        self.build_widget["Controller"] = BuildManager("Controller", core.get_controller_edit_group(), build_controller, remove_controller)
-        self.build_widget["Rig"] = BuildManager("Rig", core.get_rig_group(),build_rig, remove_rig)
+        self.build_widget["Skeleton"] = BuildManager("Skeleton", core.SKELETON_GROUP_NAME, build_skeleton, remove_skeleton)
+        self.build_widget["Controller"] = BuildManager("Controller", core.CTRL_EDIT_GROUP_NAME, build_controller, remove_controller)
+        self.build_widget["Rig"] = BuildManager("Rig", core.RIG_GROUP_NAME,build_rig, remove_rig)
 
     def add_widget(self):
         for w in self.widget:
@@ -216,12 +238,12 @@ class Gui(QtWidgets.QWidget):
 
     def set_facial_root(self):
         text = self.widget["FacialRoot"].get()
-        cmds.setAttr(f"{core.get_guide_facials_group()}.FacialRootName", l=False)
-        cmds.setAttr(f"{core.get_guide_facials_group()}.FacialRootName", text, l=True, type="string")
+        cmds.setAttr(f"{core.GUIDE_FACIALS_GROUP_NAME}.FacialRootName", l=False)
+        cmds.setAttr(f"{core.GUIDE_FACIALS_GROUP_NAME}.FacialRootName", text, l=True, type="string")
 
 
 def main():
-    if not cmds.objExists(core.get_guide_group()):
+    if not cmds.objExists(core.GUIDE_GROUP_NAME):
         MGlobal.displayError("ガイドが見つかりませんでした")
         return
 
@@ -339,8 +361,8 @@ class ListWidget(gui_base.YSListWidget):
                 if dialog.get_result():
                     cmds.undoInfo(ock=True)
                     for sel in sels:
-                        node = f"Guide_{sel.text()}_Group"
-                        cmds.delete(node)
+                        core.delete_meta_node(f"Meta_{sel.text()}")
+                        cmds.delete(f"Guide_{sel.text()}_Group")
 
                     cmds.undoInfo(cck=True)
                     self.reset()
@@ -393,16 +415,16 @@ class BuildManager(QtWidgets.QWidget):
         self.widgets["Label"] = gui_base.YSFrame(self.label)
 
         self.widgets["Visivility"] = gui_base.YSPushButton("Hide")
-        self.widgets["Visivility"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_1}); color: rgb({gui_base.STR_COLOR_1}); border-radius: 15px; padding: 5px;")
+        self.widgets["Visivility"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_1, gui_base.STR_COLOR_1))
         self.widgets["Visivility"].clicked.connect(self.set_visibility)
 
         self.widgets["Build"] = gui_base.YSPushButton("Build")
-        self.widgets["Build"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_1}); color: rgb({gui_base.STR_COLOR_1}); border-radius: 15px; padding: 5px;")
+        self.widgets["Build"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_1, gui_base.STR_COLOR_1))
         self.widgets["Build"].clicked.connect(self.build_action)
         self.widgets["Build"].clicked.connect(self.set_button_color)
 
         self.widgets["Remove"] = gui_base.YSPushButton("Remove")
-        self.widgets["Remove"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_1}); color: rgb({gui_base.STR_COLOR_1}); border-radius: 15px; padding: 5px;")
+        self.widgets["Remove"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_1, gui_base.STR_COLOR_1))
         self.widgets["Remove"].clicked.connect(self.remove_action)
 
     def add_widget(self):
@@ -426,11 +448,11 @@ class BuildManager(QtWidgets.QWidget):
 
         value = cmds.getAttr(f"{self.node}.visibility")
         if value:
-            self.widgets["Visivility"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_1}); color: rgb({gui_base.STR_COLOR_1}); border-radius: 15px; padding: 5px;")
+            self.widgets["Visivility"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_1, gui_base.STR_COLOR_1))
             self.widgets["Visivility"].setText("Hide")
 
         else:
-            self.widgets["Visivility"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_3}); color: rgb({gui_base.STR_COLOR_3}); border-radius: 15px; padding: 5px;")
+            self.widgets["Visivility"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_3, gui_base.STR_COLOR_3))
             self.widgets["Visivility"].setText("Show")
 
 
@@ -439,13 +461,13 @@ class Guide_Frame(BuildManager):
         self.widgets["Label"] = gui_base.YSFrame(self.label)
 
         self.widgets["Visivility"] = gui_base.YSPushButton("Hide")
-        self.widgets["Visivility"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_1}); color: rgb({gui_base.STR_COLOR_1}); border-radius: 15px; padding: 5px;")
+        self.widgets["Visivility"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_1, gui_base.STR_COLOR_1))
         self.widgets["Visivility"].clicked.connect(self.set_visibility)
 
         self.widgets["Frame"] = gui_base.YSFrame()
 
         self.widgets["Remove"] = gui_base.YSPushButton("Remove")
-        self.widgets["Remove"].setStyleSheet(f"background-color: rgb({gui_base.BUTTON_COLOR_1}); color: rgb({gui_base.STR_COLOR_1}); border-radius: 15px; padding: 5px;")
+        self.widgets["Remove"].setStyleSheet(get_style(gui_base.BUTTON_COLOR_1, gui_base.STR_COLOR_1))
         self.widgets["Remove"].clicked.connect(self.remove_action)
 
     def add_widget(self):
@@ -456,7 +478,7 @@ class Guide_Frame(BuildManager):
 
 
 def build_skeleton():
-    if not cmds.objExists(core.get_guide_group()):
+    if not cmds.objExists(core.GUIDE_GROUP_NAME):
         MGlobal.displayError("ガイドが見つかりませんでした")
         return
 
@@ -464,7 +486,7 @@ def build_skeleton():
 
 
 def build_controller():
-    if not cmds.objExists(core.get_guide_group()):
+    if not cmds.objExists(core.GUIDE_GROUP_NAME):
         MGlobal.displayError("ガイドが見つかりませんでした")
         return
 
@@ -472,15 +494,15 @@ def build_controller():
 
 
 def build_rig():
-    if not cmds.objExists(core.get_guide_group()):
+    if not cmds.objExists(core.GUIDE_GROUP_NAME):
         MGlobal.displayError("ガイドが見つかりませんでした")
         return
 
-    if not cmds.objExists(core.get_skeleton_group()):
+    if not cmds.objExists(core.SKELETON_GROUP_NAME):
         MGlobal.displayError("スケルトンが見つかりませんでした")
         return
 
-    if not cmds.objExists(core.get_controller_edit_group()):
+    if not cmds.objExists(core.CTRL_EDIT_GROUP_NAME):
         MGlobal.displayError("コントローラーが見つかりませんでした")
         return
 
@@ -488,39 +510,39 @@ def build_rig():
 
 
 def remove_skeleton():
-    if not cmds.objExists(core.get_skeleton_group()):
+    if not cmds.objExists(core.SKELETON_GROUP_NAME):
         return
 
     winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
     dialog = gui_base.YSConfirmDialog(None, "remove skeleton", "スケルトンを削除しますか？")
     if dialog.get_result():
-        cmds.delete(core.get_skeleton_group())
+        cmds.delete(core.SKELETON_GROUP_NAME)
 
 
 def remove_controller():
-    if not cmds.objExists(core.get_controller_edit_group()):
+    if not cmds.objExists(core.CTRL_EDIT_GROUP_NAME):
         return
 
     winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
     dialog = gui_base.YSConfirmDialog(None, "remove controller", "コントローラーを削除しますか？")
     if dialog.get_result():
-        cmds.delete(core.get_controller_edit_group())
+        cmds.delete(core.CTRL_EDIT_GROUP_NAME)
 
 
 def remove_rig():
-    if not cmds.objExists(core.get_rig_group()):
+    if not cmds.objExists(core.RIG_GROUP_NAME):
         return
 
     winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
     dialog = gui_base.YSConfirmDialog(None, "remove rig", "リグを削除しますか？")
     if dialog.get_result():
-        proxies = cmds.ls(core.get_rig_group(), type="joint", dag=True)
+        proxies = cmds.ls(core.RIG_GROUP_NAME, type="joint", dag=True)
         proxies = [proxy for proxy in proxies if "Proxy_" in proxy]
-        cmds.delete(proxies + [core.get_rig_group()])
+        cmds.delete(proxies + [core.RIG_GROUP_NAME])
 
 
 def remove_guide():
-    if not cmds.objExists(core.get_guide_group()):
+    if not cmds.objExists(core.GUIDE_GROUP_NAME):
         return
 
     winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
@@ -528,4 +550,6 @@ def remove_guide():
     if not dialog.get_result():
         return
 
-    cmds.delete(core.get_meta_nodes() + core.get_facial_meta_nodes() + [core.get_guide_group()])
+    #for node in core.get_meta_nodes() + core.get_facial_meta_nodes():
+    #    cmds.delete(node)
+    cmds.delete(core.GUIDE_GROUP_NAME)

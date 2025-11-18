@@ -7,7 +7,7 @@ from ysrig import core
 
 
 def main():
-    if cmds.objExists(core.get_guide_group()):
+    if cmds.objExists(core.GUIDE_GROUP_NAME):
         MGlobal.displayError("すでにガイドが存在します")
         return
 
@@ -44,10 +44,10 @@ def main():
         func(data[mod])
 
     attrs = [
-        [f"{core.get_root_group()}.YSRigVersion", ver],
-        [f"{core.get_root_group()}.BuildType", build_type],
-        [f"{core.get_root_group()}.SourceFileName", file_name],
-        [f"{core.get_guide_facials_group()}.FacialRootName", facial_root]
+        [f"{core.YSRIG_GROUP_NAME}.YSRigVersion", ver],
+        [f"{core.YSRIG_GROUP_NAME}.BuildType", build_type],
+        [f"{core.YSRIG_GROUP_NAME}.SourceFileName", file_name],
+        [f"{core.GUIDE_FACIALS_GROUP_NAME}.FacialRootName", facial_root]
     ]
 
     for attr in attrs:

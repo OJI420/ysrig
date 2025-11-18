@@ -10,7 +10,7 @@ class Gui(gui_base.GuiBase):
         self.widget["HeadJointName"] = gui_base.YSLineEdit(label="★ Head Joint Name", placeholder_text="Head")
 
         self.widget["Frame2"] = gui_base.YSFrame(label="Skeleton")
-        self.widget["JointCount"] = gui_base.YSDoubleSpinBox(label="★ Neck Joint Count", range=[2, 99], decimals=0, step=1)
+        self.widget["JointCount"] = gui_base.YSDoubleSpinBox(label="★ Neck Joint Count", range=[2, 9], decimals=0, step=1)
         self.widget["GoalBone"] = gui_base.YSCheckBox(label="Goal Bone")
         self.widget["Mirror"] = gui_base.YSCheckBox(label="Mirror")
 

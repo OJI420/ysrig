@@ -109,7 +109,7 @@ class RigBace:
         grp = cmds.rename(grp, f"Controller_{self.grp_name}_Group")
         
         cmds.addAttr(grp, ln="YSNodeLabel", dt="string")
-        cmds.setAttr(f"{grp}.YSNodeLabel", core.get_rig_module_group(), type="string")
+        cmds.setAttr(f"{grp}.YSNodeLabel", core.RIG_MODULES_GROUP_NAME, type="string")
         cmds.setAttr(f"{grp}.YSNodeLabel", l=True)
         
         for axis in "XYZ":

@@ -121,7 +121,7 @@ class Guide(guide_base.GuideBase):
         self.aim_nodes[2] = core.connect_aim_constraint(self.guide_nodes[3], self.guide_nodes[2])
         core.connect_orient_constraint(self.guide_joints[2], self.guide_proxies[2])
 
-        dm = core.create_node("decomposeMatrix", f"Dm_{self.other_nodes[1]}")
+        dm = core._create_node("decomposeMatrix", f"Dm_{self.other_nodes[1]}")
         cmds.connectAttr(f"{self.guide_joints[2]}.worldInverseMatrix[0]", f"{dm}.inputMatrix")
         cmds.connectAttr(f"{dm}.outputTranslateX", f"{self.other_node_spaces[1]}.translateX")
         cmds.connectAttr(f"{dm}.outputTranslateX", f"{self.other_node_spaces[2]}.translateX")

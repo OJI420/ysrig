@@ -7,13 +7,13 @@ reload(guide_base)
 
 class Guide(guide_base.GuideBase):
     def _handle_error(self):
-        if cmds.objExists(core.get_root_group()):
-            MGlobal.displayError(f"'{core.get_root_group()}' はすでに存在しています")
+        if cmds.objExists(core.YSRIG_GROUP_NAME):
+            MGlobal.displayError(f"'{core.YSRIG_GROUP_NAME}' はすでに存在しています")
             self.error = True
             return
 
-        if cmds.objExists(core.get_guide_group()):
-            MGlobal.displayError(f"'{core.get_guide_group()}' はすでに存在しています")
+        if cmds.objExists(core.GUIDE_GROUP_NAME):
+            MGlobal.displayError(f"'{core.GUIDE_GROUP_NAME}' はすでに存在しています")
             self.error = True
             return
 
@@ -24,9 +24,9 @@ class Guide(guide_base.GuideBase):
 
     def create(self):
         self.rig_group = core.create_rig_grp()
-        self.guide_group = core.create_labeled_node("transform", core.get_guide_group(), name=core.get_guide_group())
-        self.guide_modules_group = core.create_labeled_node("transform", core.get_guide_modules_group(), name=core.get_guide_modules_group())
-        self.guide_facials_group = core.create_labeled_node("transform", core.get_guide_facials_group(), name=core.get_guide_facials_group())
+        self.guide_group = core.create_labeled_node("transform", core.GUIDE_GROUP_NAME, name=core.GUIDE_GROUP_NAME)
+        self.guide_modules_group = core.create_labeled_node("transform", core.GUIDE_MODULES_GROUP_NAME, name=core.GUIDE_MODULES_GROUP_NAME)
+        self.guide_facials_group = core.create_labeled_node("transform", core.GUIDE_FACIALS_GROUP_NAME, name=core.GUIDE_FACIALS_GROUP_NAME)
         cmds.addAttr(self.guide_facials_group, ln="FacialRootName", dt="string")
         cmds.setAttr(f"{self.guide_facials_group}.FacialRootName", l=True)
         name = "Root"

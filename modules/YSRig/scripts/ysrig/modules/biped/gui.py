@@ -8,10 +8,10 @@ class Gui(gui_base.GuiBase):
 
     def gui(self):
         self.widget["Frame1"] = gui_base.YSFrame(label="Skeleton")
-        self.widget["SpineJointCount"] = gui_base.YSDoubleSpinBox(label="★ Spine Joint Count", range=[1, 99], decimals=0, step=1)
-        self.widget["NeckJointCount"] = gui_base.YSDoubleSpinBox(label="★ Neck Joint Count", range=[2, 99], decimals=0, step=1)
-        self.widget["ArmTwistJointCount"] = gui_base.YSDoubleSpinBox(label="Arm Twist Joint Count", range=[0, 99], decimals=0, step=1)
-        self.widget["LegTwistJointCount"] = gui_base.YSDoubleSpinBox(label="Leg Twist Joint Count", range=[0, 99], decimals=0, step=1)
+        self.widget["SpineJointCount"] = gui_base.YSDoubleSpinBox(label="★ Spine Joint Count", range=[1, 9], decimals=0, step=1)
+        self.widget["NeckJointCount"] = gui_base.YSDoubleSpinBox(label="★ Neck Joint Count", range=[2, 9], decimals=0, step=1)
+        self.widget["ArmTwistJointCount"] = gui_base.YSDoubleSpinBox(label="Arm Twist Joint Count", range=[0, 9], decimals=0, step=1)
+        self.widget["LegTwistJointCount"] = gui_base.YSDoubleSpinBox(label="Leg Twist Joint Count", range=[0, 9], decimals=0, step=1)
         self.widget["UseFinger"] = gui_base.YSCheckBox(label="★ Use Finger")
         self.widget["FingerNames"] = gui_base.YSCheckList(label="★ Finger Names")
         self.widget["UseToeSub"] = gui_base.YSCheckBox(label="★ Use ToeSub")

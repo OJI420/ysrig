@@ -67,7 +67,7 @@ class Guide(guide_base.GuideBase):
         self.guide_node_spaces = guide_node_spaces
 
     def connect(self):
-        dm = core.create_node("decomposeMatrix", f"Dm_{self.guide_joint_spaces[1]}")
+        dm = core._create_node("decomposeMatrix", f"Dm_{self.guide_joint_spaces[1]}")
         cmds.connectAttr(f"{self.guide_joints[0]}.worldInverseMatrix[0]", f"{dm}.inputMatrix")
         for axis in "XYZ":
             cmds.connectAttr(f"{dm}.outputTranslate{axis}", f"{self.guide_joint_spaces[1]}.translate{axis}")

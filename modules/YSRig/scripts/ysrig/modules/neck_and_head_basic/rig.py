@@ -29,7 +29,7 @@ class Rig(rig_base.RigBace):
         for ctrl, proxy in zip(self.ctrls, self.proxies):
             core.connect_matrix(ctrl, proxy, tl=self.translate_enabled, rt=True, sc=True, lc=self.connect_type)
 
-        rev = core.create_node("reverse", name=f"Rev_{self.settings_node}_WL")
+        rev = core._create_node("reverse", name=f"Rev_{self.settings_node}_WL")
         cmds.connectAttr(f"{self.settings_node}.WL", f"{rev}.inputX")
         w = 1 / len(self.ctrl_spaces)
         for i, space in enumerate(self.ctrl_spaces):

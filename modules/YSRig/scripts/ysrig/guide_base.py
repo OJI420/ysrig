@@ -87,25 +87,25 @@ class GuideBase:
         self.aim_vector = [1, 0, 0]
         self.root_radius = 1.0
 
-        self.modules_grp = core.get_guide_modules_group()
-        self.facials_grp = core.get_guide_facials_group()
+        self.modules_grp = core.GUIDE_MODULES_GROUP_NAME
+        self.facials_grp = core.GUIDE_FACIALS_GROUP_NAME
 
     def setup(self, *args):
         pass
 
     def _handle_error(self):
-        if not cmds.objExists(core.get_root_group()):
-            MGlobal.displayError(f"'{core.get_root_group()}' が見つかりませんでした")
+        if not cmds.objExists(core.YSRIG_GROUP_NAME):
+            MGlobal.displayError(f"'{core.YSRIG_GROUP_NAME}' が見つかりませんでした")
             self.error = True
             return
 
-        if not cmds.objExists(core.get_guide_group()):
-            MGlobal.displayError(f"'{core.get_guide_group()}' が見つかりませんでした")
+        if not cmds.objExists(core.GUIDE_GROUP_NAME):
+            MGlobal.displayError(f"'{core.GUIDE_GROUP_NAME}' が見つかりませんでした")
             self.error = True
             return
 
-        if not cmds.objExists(core.get_guide_modules_group()):
-            MGlobal.displayError(f"'{core.get_guide_modules_group()}' が見つかりませんでした")
+        if not cmds.objExists(core.GUIDE_MODULES_GROUP_NAME):
+            MGlobal.displayError(f"'{core.GUIDE_MODULES_GROUP_NAME}' が見つかりませんでした")
             self.error = True
             return
 
@@ -130,7 +130,7 @@ class GuideBase:
         grp = cmds.rename(grp, f"Guide_{self.grp_name}_Group")
         
         cmds.addAttr(grp, ln="YSNodeLabel", dt="string")
-        cmds.setAttr(f"{grp}.YSNodeLabel", core.get_guide_modules_group(), type="string")
+        cmds.setAttr(f"{grp}.YSNodeLabel", core.GUIDE_MODULES_GROUP_NAME, type="string")
         cmds.setAttr(f"{grp}.YSNodeLabel", l=True)
         
         for axis in "XYZ":

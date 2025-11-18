@@ -6,12 +6,12 @@ reload(rig_base)
 
 class Rig(rig_base.RigBace):
     def _create_grp(self):
-        rig_grp = core.create_labeled_node("transform", core.get_rig_group(), name=core.get_rig_group())
-        cmds.parent(rig_grp, core.get_root_group())
+        rig_grp = core.create_labeled_node("transform", core.RIG_GROUP_NAME, name=core.RIG_GROUP_NAME)
+        cmds.parent(rig_grp, core.YSRIG_GROUP_NAME)
         super()._create_grp()
 
     def parent_grp(self):
-        cmds.parent(self.grp, core.get_rig_group())
+        cmds.parent(self.grp, core.RIG_GROUP_NAME)
 
     def create_ctrl_grp(self):
         pass

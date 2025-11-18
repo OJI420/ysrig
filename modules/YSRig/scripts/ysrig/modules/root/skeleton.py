@@ -7,6 +7,6 @@ reload(skeleton_base)
 
 class Skeleton(skeleton_base.SkeletonBase):
     def create(self):
-        sk_grp = core.create_labeled_node("transform", core.get_skeleton_group(), name=core.get_skeleton_group())
-        cmds.parent(sk_grp, core.get_root_group())
+        sk_grp = core.create_labeled_node("transform", core.SKELETON_GROUP_NAME, name=core.SKELETON_GROUP_NAME)
+        cmds.parent(sk_grp, core.YSRIG_GROUP_NAME)
         super().create()
