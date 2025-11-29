@@ -15,6 +15,6 @@ class Data(gui.PickerData):
             color = core.get_ctrl_color_code(name)
             buttons += [gui.ButtonData(name=name, shape_points=s["cvs"], position=s["pos"], color=color)]
 
-        data = gui.PickerModuleData(name=grp, position={'x': 0, 'y': 0}, buttons=buttons)
+        data = gui.PickerModuleData(name=grp, position={'x': 0, 'y': 0}, buttons=buttons, scripts=core.create_eunmattr_cycler(grp))
 
         self.datas = [data]

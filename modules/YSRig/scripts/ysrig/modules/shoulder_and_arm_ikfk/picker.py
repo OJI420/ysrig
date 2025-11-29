@@ -37,5 +37,5 @@ class Data(gui.PickerData):
 
                 buttons += [gui.ButtonData(name=name, shape_points=shape_points, position=pos, color=color, hide_attr=hide_attr, hide_type=hide_type)]
 
-            datas += [gui.PickerModuleData(name=grp, position={'x': 0, 'y': 0}, buttons=buttons, side=side, mirror=mirror)]
+            datas += [gui.PickerModuleData(name=grp, position={'x': 0, 'y': 0}, buttons=buttons, side=side, mirror=mirror, scripts=core.create_eunmattr_cycler(grp))]
         self.datas = datas

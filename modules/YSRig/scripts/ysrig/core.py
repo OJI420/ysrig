@@ -2,12 +2,13 @@ import os
 import json
 import math
 import importlib
+from functools import partial
 from maya import cmds, mel
 import maya.api.OpenMaya as om2
 from ysrig import create_node
 importlib.reload(create_node)
 
-VERSION = "2.2.2"
+VERSION = "2.3.0"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -2057,3 +2058,31 @@ def delete_meta_node(meta_node):
                 cmds.delete(node)
 
     cmds.delete(meta_node)
+
+
+def create_eunmattr_cycler(grp_name) -> dict:
+    """
+    アトリビュートを順番に切り替えていくスクリプトを辞書で返す関数
+    """
+    def _cycle_attr(attr, full_node):
+        full_attr = f"{full_node}.{attr}"
+        num = len(cmds.attributeQuery(attr, node=full_node, le=True)[0].split(":"))
+        value = cmds.getAttr(full_attr)
+        if num == value+1:
+            cmds.setAttr(full_attr, 0)
+        else:
+            cmds.setAttr(full_attr, value+1)
+
+    node = f"Controller_{grp_name}_Settings"
+    grp = f"Controller_{grp_name}_Group"
+    if not cmds.objExists(grp):
+        return None
+
+    # キー設定可能かつ、benum型のアトリビュートをリスト化
+    attrs = [attr for attr in cmds.listAttr(node, k=True) if cmds.getAttr(f"{node}.{attr}", type=True) == "enum"]
+    script = {}
+    for attr in attrs:
+        full_node = f"{grp}|{node}"
+        script[attr] = partial(_cycle_attr, attr, full_node)
+
+    return script

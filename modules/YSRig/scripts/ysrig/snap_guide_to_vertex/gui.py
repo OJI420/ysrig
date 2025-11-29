@@ -24,7 +24,12 @@ class Gui(QtWidgets.QWidget):
         self.gui()
         self.add_widget()
 
+        self._app = QtWidgets.QApplication.instance()
+        self._app.aboutToQuit.connect(self.save_window_settings_registry)
+        self.load_window_settings_registry()
+
     def _setup(self):
+        self.ysrig_window = True
         self.module_name = ""
         self.title = "Snap Guide To Vertex"
         self.file_path = ""
@@ -84,17 +89,35 @@ class Gui(QtWidgets.QWidget):
         for w in self.widget:
             self.main_layout.addWidget(self.widget[w])
 
-    def closeEvent(self, event):
-        super().closeEvent(event)
-        if self.help_window:
-            self.help_window.close()
-
     def call(self):
         node = self.widget["TargetGuide"].get()
         if not cmds.objExists(node):
             return
 
         core.set_vtx_average_point(node)
+
+    def save_window_settings_registry(self):
+        """レジストリにウィンドウ状態を保存"""
+        settings = QtCore.QSettings("YSRigSystem", self.objectName())
+        settings.setValue("geometry", self.saveGeometry())
+
+    def load_window_settings_registry(self):
+        """レジストリからウィンドウ状態を復元"""
+        settings = QtCore.QSettings("YSRigSystem", self.objectName())
+        geometry_data = settings.value("geometry")
+
+        if geometry_data:
+            self.restoreGeometry(geometry_data)
+
+    def closeEvent(self, event):
+        try:
+            self._app.aboutToQuit.disconnect(self.save_window_settings_registry)
+        except (RuntimeError, TypeError):
+            pass
+        super().closeEvent(event)
+        self.save_window_settings_registry()
+        if self.help_window:
+            self.help_window.close()
 
 
 def main():

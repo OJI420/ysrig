@@ -1,7 +1,7 @@
 import importlib
 import maya.cmds as cmds
 import maya.mel as mel
-from ysrig import reload, skeleton_base, ctrl_base, rig_base, build_manager, export_meta_node, import_meta_node, export_user_settings, import_user_settings, reset_user_settings, help, snap_guide_to_vertex, picker_editor
+from ysrig import reload, skeleton_base, ctrl_base, rig_base, build_manager, export_meta_node, import_meta_node, export_user_settings, import_user_settings, reset_user_settings, help, snap_guide_to_vertex, picker_editor, picker, remove_registry
 from ysrig.modules import chain_basic, root, spine_basic, neck_and_head_basic, shoulder_and_arm_ikfk, leg_and_foot_ikfk, finger_fk, eye_basic, eye_and_simple_eyelid, jaw_basic, biped
 reload.main(chain_basic)
 reload.main(root)
@@ -18,6 +18,7 @@ reload.main(biped)
 reload.main(help)
 reload.main(snap_guide_to_vertex)
 reload.main(picker_editor)
+reload.main(picker)
 importlib.reload(skeleton_base)
 importlib.reload(ctrl_base)
 importlib.reload(rig_base)
@@ -26,6 +27,7 @@ importlib.reload(import_meta_node)
 importlib.reload(export_user_settings)
 importlib.reload(import_user_settings)
 importlib.reload(reset_user_settings)
+importlib.reload(remove_registry)
 
 MAINWINDOW = mel.eval('$tmpVar=$gMainWindow')
 MENU = "ysrig_Menu"
@@ -72,9 +74,16 @@ def main(ver):
 
     cmds.setParent("..", m=True)
 
-    cmds.menuItem(label="Editor", subMenu=True, tearOff=True)
-    cmds.menuItem(label="Build Manager", command=lambda *args: build_manager.gui.main())
+    cmds.menuItem(label="Guide Tools", subMenu=True, tearOff=True)
     cmds.menuItem(label="Snap Guide To Vertex", command=lambda *args: snap_guide_to_vertex.gui.main())
+
+    cmds.setParent("..", m=True)
+
+    cmds.menuItem(label="Build Manager", command=lambda *args: build_manager.gui.main())
+
+    cmds.menuItem(label="Picker", subMenu=True, tearOff=True)
+    cmds.menuItem(label="Picker Editor", command=lambda *args: picker_editor.gui.main())
+    cmds.menuItem(label="Show Picker", command=lambda *args: picker.gui.main())
 
     cmds.setParent("..", m=True)
 
@@ -90,6 +99,7 @@ def main(ver):
     cmds.menuItem(label="Export User Settings", command=lambda *args: export_user_settings.main())
     cmds.menuItem(label="Import User Settings", command=lambda *args: import_user_settings.main())
     cmds.menuItem(label="Reset User Settings", command=lambda *args: reset_user_settings.main())
+    cmds.menuItem(label="Reset Window Layout", command=lambda *args: remove_registry.main())
 
     cmds.setParent("..", m=True)
 

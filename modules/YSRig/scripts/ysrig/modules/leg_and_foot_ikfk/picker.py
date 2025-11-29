@@ -71,12 +71,12 @@ class Data(gui.PickerData):
                 hide_type = 1
                 rev_buttons += [gui.ButtonData(name=name, shape_points=shape_points, position=pos, color=color, hide_attr=hide_attr, hide_type=hide_type)]
 
-            rev_data = [gui.PickerModuleData(name=f"{grp}_REV", position={'x': 0, 'y': 0}, buttons=rev_buttons, side=side, mirror=mirror)]
+            rev_data = [gui.PickerModuleData(name=f"{grp}_REV", position={'x': 0, 'y': 0}, buttons=rev_buttons, side=side, mirror=mirror, scripts=core.create_eunmattr_cycler(grp))]
             s = shape_data["Pointer"]
             shape_points = s["cvs"]
             pos = s["pos"].copy()
             color = core.get_ctrl_color_code(names[0])
             buttons += [gui.ButtonData(name=f"{grp}@Pointer", shape_points=shape_points, position=pos, color=color, child_modules=rev_data)]
 
-            datas += [gui.PickerModuleData(name=grp, position={'x': 0, 'y': 0}, buttons=buttons, side=side, mirror=mirror)]
+            datas += [gui.PickerModuleData(name=grp, position={'x': 0, 'y': 0}, buttons=buttons, side=side, mirror=mirror, scripts=core.create_eunmattr_cycler(grp))]
         self.datas = datas

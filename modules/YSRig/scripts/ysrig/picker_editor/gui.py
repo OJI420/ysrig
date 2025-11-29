@@ -515,8 +515,10 @@ class GraphicsEditor(QtWidgets.QMainWindow):
         if parent_editor:
             self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
+        self.ysrig_window = True
         self.setWindowTitle(TITLE)
         self.setObjectName(OBJ)
+        self.help_window = None
 
         self.active_modules: List[PickerModuleItem] = []
         self.module_to_tree_item_map: Dict[PickerModuleItem, QtWidgets.QTreeWidgetItem] = {}
@@ -699,6 +701,10 @@ class GraphicsEditor(QtWidgets.QMainWindow):
             self.parent_button_data = None
             self.parent_module_item = None
 
+        if self.help_window:
+            self.help_window.close()
+            self.help_window.deleteLater()
+
         super().closeEvent(event)
 
 
@@ -716,6 +722,14 @@ class GraphicsEditor(QtWidgets.QMainWindow):
         redo_action.triggered.connect(self.undo_stack.redo)
         self.undo_stack.canRedoChanged.connect(redo_action.setEnabled)
         edit_menu.addAction(redo_action)
+
+        help_action = QAction("&Help", self)
+        help_action.triggered.connect(self.open_help)
+        menu_bar.addAction(help_action)
+
+    def open_help(self):
+        self.help_window = HelpWindow(self)
+        self.help_window.show()
 
     def _setup_transform_controls(self, panel_layout: QtWidgets.QVBoxLayout):
         transform_group = QtWidgets.QGroupBox("Transform Controls")
@@ -1574,6 +1588,53 @@ class PickerData:
         picker_node = f"Picker_{data.name}"
         if not cmds.listRelatives(picker_node, p=True) == [parent]:
             cmds.parent(picker_node, parent)
+
+
+class HelpWindow(QtWidgets.QWidget):
+    """
+    ヘルプ用のmdファイルを読み込んで表示するウィンドウ
+    """
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setup()
+        self.pre_close()
+        self.window()
+        self.gui()
+        self.load()
+
+    def setup(self):
+        self.md_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "HELP.md")
+        self.main_layout = None
+        self.browser = None
+
+    def pre_close(self):
+        for widget in QtWidgets.QApplication.allWidgets():
+            if widget.objectName() == f"Picker_Editor_Help_Gui":
+                widget.close()
+                widget.deleteLater()
+
+    def window(self):
+        self.setWindowTitle(f"Picker Editor - Help")
+        self.setObjectName(f"Picker_Editor_Help_Gui")
+        self.setWindowFlags(QtCore.Qt.Window)
+        self.setMinimumWidth(1000)
+        self.setMinimumHeight(500)
+        self.setStyleSheet(f"background-color: rgb({gui_base.WINDOW_COLOR_2});")
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setSpacing(10)
+        self.main_layout.setContentsMargins(10, 10, 10, 10)
+
+    def gui(self):
+        self.browser = QtWidgets.QTextBrowser()
+        self.main_layout.addWidget(self.browser)
+
+    def load(self):
+        with open(self.md_path, "r", encoding="utf-8") as f:
+            md_text = f.read()
+
+        html = gui_base.simple_md_to_html(md_text)
+        self.browser.setHtml(html)
 
 
 class Data(PickerData):
