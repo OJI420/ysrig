@@ -196,8 +196,7 @@ class GuideBase:
         self._lock_attrs = [
         self.grp, ["scale"],
         self.root_joint, ["scale", "visibility"],
-        self.guide_joints[0], ["translate"]
-        ]
+        self.guide_joints[0], ["translate"]]
         for gj in self.guide_joints:
             self._lock_attrs += [
             gj, ["rotate", "scale", "visibility"]

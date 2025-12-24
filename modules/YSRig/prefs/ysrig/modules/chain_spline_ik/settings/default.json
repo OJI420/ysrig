@@ -1,0 +1,14 @@
+{
+    "Frame1": "None",
+    "Side": 0,
+    "GroupName": "Spline",
+    "Frame2": "None",
+    "SplineJointCount": 10.0,
+    "GoalBone": true,
+    "Mirror": true,
+    "Frame3": "None",
+    "CtrlCount": 4,
+    "CtrlShapeType": 1,
+    "Frame4": "None",
+    "ConnectType": 1
+}
