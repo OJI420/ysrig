@@ -2,8 +2,10 @@ import importlib
 import maya.cmds as cmds
 import maya.mel as mel
 from ysrig import reload, skeleton_base, ctrl_base, rig_base, build_manager, export_meta_node, import_meta_node, export_user_settings, import_user_settings, reset_user_settings, help, snap_guide_to_vertex, picker_editor, picker, remove_registry
-from ysrig.modules import chain_basic, root, spine_basic, neck_and_head_basic, shoulder_and_arm_ikfk, leg_and_foot_ikfk, finger_fk, eye_basic, eye_and_simple_eyelid, jaw_basic, biped
+from ysrig.modules import chain_basic, chain_spline_ik, ribbon, root, spine_basic, neck_and_head_basic, shoulder_and_arm_ikfk, leg_and_foot_ikfk, finger_fk, eye_basic, eye_and_simple_eyelid, jaw_basic, biped
 reload.main(chain_basic)
+reload.main(chain_spline_ik)
+reload.main(ribbon)
 reload.main(root)
 reload.main(spine_basic)
 reload.main(neck_and_head_basic)
@@ -49,6 +51,7 @@ def main(ver):
 
     cmds.menuItem(divider=True, label="Chain")
     cmds.menuItem(label="Chain Basic", command=lambda *args: chain_basic.gui.main())
+    cmds.menuItem(label="Chain Spline IK", command=lambda *args: chain_spline_ik.gui.main())
 
     cmds.menuItem(divider=True, label="Spine")
     cmds.menuItem(label="Spine Basic", command=lambda *args: spine_basic.gui.main())
@@ -71,6 +74,11 @@ def main(ver):
 
     cmds.menuItem(divider=True, label="Jaw")
     cmds.menuItem(label="Jaw Basic", command=lambda *args: jaw_basic.gui.main())
+
+    """
+    cmds.menuItem(divider=True, label="Other")
+    cmds.menuItem(label="Ribbon", command=lambda *args: ribbon.gui.main())
+    """
 
     cmds.setParent("..", m=True)
 

@@ -20,6 +20,9 @@ def get_meta_data():
             if attr == "YSNodeLabel":
                 continue
 
+            if attr == "PickerData":
+                continue
+
             if cmds.attributeQuery(attr, node=meta_node, multi=True):
                 data[attr] = core.get_list_attributes(meta_node, attr)
 

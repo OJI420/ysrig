@@ -117,6 +117,14 @@ class Rig(rig_base.RigBace):
 
         self.knee_line = core.connect_curve_point(f"CV_{self.grp_name}_Knee", [self.ik_joints[1], self.ctrls[-8]], parent=self.ctrl_grp, lc=self.connect_type)
 
+        target_ik = cmds.createNode("transform", name=f"Target_{self.grp_name}_IK")
+        cmds.parent(target_ik, self.ik_joints[2])
+        cmds.matchTransform(target_ik, self.ctrls[2])
+
+        target_fk = cmds.createNode("transform", name=f"Target_{self.grp_name}_FK")
+        cmds.parent(target_fk, self.ctrls[2])
+        cmds.matchTransform(target_fk, self.ctrls[-7])
+
         """
         self.ctrls
         [0] [-13] -> Ctrl_L_UpperLeg
@@ -285,6 +293,8 @@ class Rig(rig_base.RigBace):
 
         self.lock_attrs += [
             self.ctrls[1], ["rx", "ry"],
+            self.rev_toe_ctrls[0], ["rx", "ry"],
+            self.ctrls[3], ["rx", "ry"],
             self.ctrls[-8], ["rotate"],
             self.ctrls[-6], ["translate", "ry"],
             self.ctrls[-5], ["translate", "rx"],
@@ -424,6 +434,14 @@ class RigMirror(Rig):
             self.ctrl_spaces[i] = core.create_space(ctrl, parent=True)
 
         self.knee_line = core.connect_curve_point(f"CV_{self.grp_name}_Knee", [self.ik_joints[1], self.ctrls[-8]], parent=self.ctrl_grp, lc=self.connect_type)
+
+        target_ik = cmds.createNode("transform", name=f"Target_{self.grp_name}_IK")
+        cmds.parent(target_ik, self.ik_joints[2])
+        cmds.matchTransform(target_ik, self.ctrls[2])
+
+        target_fk = cmds.createNode("transform", name=f"Target_{self.grp_name}_FK")
+        cmds.parent(target_fk, self.ctrls[2])
+        cmds.matchTransform(target_fk, self.ctrls[-7])
 
         core.mirror_space(self.ctrl_grp)
 

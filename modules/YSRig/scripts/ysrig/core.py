@@ -8,7 +8,7 @@ import maya.api.OpenMaya as om2
 from ysrig import create_node
 importlib.reload(create_node)
 
-VERSION = "2.3.0"
+VERSION = "2.5.0"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -2086,3 +2086,63 @@ def create_eunmattr_cycler(grp_name) -> dict:
         script[attr] = partial(_cycle_attr, attr, full_node)
 
     return script
+
+
+def build_curve_from_joints(joints:list[str], name:str="Curve") -> str:
+    """
+    ジョイントのリストを受け取り、各位置を通過する1次カーブを作成する関数
+    
+    Args:
+        joint_list (list): ジョイント名のリスト
+        name (str): 作成されるカーブの名前（省略可能）
+        
+    Returns:
+        str: 作成されたカーブの名前
+    """
+
+    points = [cmds.xform(jt, q=True, ws=True, t=True) for jt in joints]
+    curve = cmds.curve(d=1, p=points, name=name)
+
+    return curve
+
+
+def rebuild_curve(curve, pnum):
+    cmds.rebuildCurve(
+        curve,
+        replaceOriginal=True,
+        rebuildType=0,
+        endKnots=1,
+        keepRange=2,
+        keepControlPoints=False,
+        keepEndPoints=True,
+        keepTangents=False,
+        spans=pnum-3,
+        degree=3,
+        tolerance=0.01
+        )
+
+
+def get_curve_points_pos(curve) -> list[list[float]]:
+    cv = cmds.listRelatives(curve, s=True)[0]
+    return [cmds.getAttr(f"{cv}.controlPoints[{i}]")[0] for i in range(cmds.getAttr(f"{cv}.controlPoints", size=True))]
+
+
+def cluster_curve(curve, prefix="Cluster_"):
+    """
+    指定したカーブの各CVに個別のクラスターを作成する関数
+    (Select -> Cluster Curve と同等の処理)
+    """
+    # シェイプノードを取得（カーブ本体）
+    cv = cmds.listRelatives(curve, shapes=True)[0]
+    return [cmds.cluster(f"{curve}.cv[{i}]", name=f"{prefix}{curve}_{i + 1:02d}", relative=True)[1] for i in range(cmds.getAttr(f"{cv}.controlPoints", size=True))]
+
+
+def get_mirror_replacement(side, base_side):
+    if not base_side or side == base_side:
+        return "", ""
+
+    if side == "L":
+        return "R_", "L_"
+
+    elif side == "R":
+        return "L_", "R_"

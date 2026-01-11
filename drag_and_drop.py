@@ -20,7 +20,7 @@ elif int(maya_ver) >= 2025:
     from shiboken6 import wrapInstance
 
 PLUGIN_NAME = "ysrig_plugin.py"
-VERSION = "2.3.0"
+VERSION = "2.5.0"
 
 MAYA_WINDOW = wrapInstance(int(OpenMayaUI.MQtUtil.mainWindow()), QtWidgets.QWidget) 
 
