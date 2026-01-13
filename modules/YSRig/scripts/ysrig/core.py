@@ -8,7 +8,7 @@ import maya.api.OpenMaya as om2
 from ysrig import create_node
 importlib.reload(create_node)
 
-VERSION = "2.4.0"
+VERSION = "2.6.0"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -2135,3 +2135,14 @@ def cluster_curve(curve, prefix="Cluster_"):
     # シェイプノードを取得（カーブ本体）
     cv = cmds.listRelatives(curve, shapes=True)[0]
     return [cmds.cluster(f"{curve}.cv[{i}]", name=f"{prefix}{curve}_{i + 1:02d}", relative=True)[1] for i in range(cmds.getAttr(f"{cv}.controlPoints", size=True))]
+
+
+def get_mirror_replacement(side, base_side):
+    if not base_side or side == base_side:
+        return "", ""
+
+    if side == "L":
+        return "R_", "L_"
+
+    elif side == "R":
+        return "L_", "R_"

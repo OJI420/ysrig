@@ -7,7 +7,7 @@ from ysrig import addmenu
 
 MENU = "ysrig_Menu"
 VENDOR = "Yukito Suzuki"
-VERSION = "2.4.0"
+VERSION = "2.6.0"
 
 def initializePlugin(plugin):
     reload(addmenu)

@@ -360,7 +360,7 @@ class DragHandle(QtWidgets.QFrame):
 class PickerView(QtWidgets.QGraphicsView):
     def __init__(self, scene, parent_window):
         super().__init__(scene, parent_window)
-        self.parent_window = parent_window
+        self.parent_window :YSPicker = parent_window
 
         self.setDragMode(NO_DRAG)
         
@@ -395,10 +395,85 @@ class PickerView(QtWidgets.QGraphicsView):
             self.setBackgroundBrush(self._transparent_brush)
 
     def mousePressEvent(self, event):
+        # 左クリック
         if event.button() == LEFT_BUTTON:
             self._drag_start_pos = event.pos()
             self._is_dragging = False
+        
+        # 右クリック
+        elif event.button() == RIGHT_BUTTON:
+            # クリックした位置にアイテムがあるか確認
+            item = self.itemAt(event.pos())
+            
+            # アイテムがない場合のみ、メニューを表示
+            if item is None:
+                self._show_background_menu(event)
+                event.accept()
+                return
+
         super().mousePressEvent(event)
+
+    def _show_background_menu(self, event):
+        def get_ctrls(mod):
+            ctrls = []
+            buttons = mod.buttons
+            for button in buttons:
+                name = button.name
+                if "@" in name:
+                    if button.child_modules:
+                        for m in button.child_modules:
+                            cs = get_ctrls(m)
+                            if cs:
+                                ctrls += cs
+
+                else:
+                    ctrls += [name]
+
+            return ctrls
+
+        def select():
+            ctrls = []
+            for mod in self.parent_window.modules_data:
+                ctrls += get_ctrls(mod)
+
+            ctrls = [f"Ctrl_{c}" for c in ctrls]
+            ctrls = ctrls[1:] + ctrls[:1]
+            cmds.select(ctrls)
+
+            YSPicker.refresh_all_pickers()
+
+        def deselect():
+            cmds.select(cl=True)
+            YSPicker.refresh_all_pickers()
+
+        def reset_transform():
+            cmds.undoInfo(ock=True)
+            sel = cmds.ls(sl=True)
+            attrs = {"tx":0, "ty":0, "tz":0, "rx":0, "ry":0, "rz":0, "sx":1, "sy":1, "sz":1}
+            for s in sel:
+                for attr in attrs:
+                    if not cmds.getAttr(f"{s}.{attr}", l=True):
+                        cmds.setAttr(f"{s}.{attr}", attrs[attr])
+
+            cmds.undoInfo(cck=True)
+
+        menu = QtWidgets.QMenu()
+
+        action_select = menu.addAction("All Select")
+        action_select.triggered.connect(select)
+
+        action_deselect = menu.addAction("All Deselect")
+        action_deselect.triggered.connect(deselect)
+
+        action_reset = menu.addAction("Reset Selection Transform")
+        action_reset.triggered.connect(reset_transform)
+
+        if IS_PYSIDE6:
+            gp = event.screenPos().toPoint() 
+            menu.exec(gp)
+        else:
+            gp = event.screenPos()
+            menu.exec_(gp)
 
     def mouseMoveEvent(self, event):
         if event.buttons() & LEFT_BUTTON:
