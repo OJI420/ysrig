@@ -8,7 +8,7 @@ import maya.api.OpenMaya as om2
 from ysrig import create_node
 importlib.reload(create_node)
 
-VERSION = "2.6.0"
+VERSION = "2.6.1"
 
 this_file = os.path.abspath(__file__)
 prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))

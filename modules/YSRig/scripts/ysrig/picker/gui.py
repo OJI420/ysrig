@@ -468,11 +468,10 @@ class PickerView(QtWidgets.QGraphicsView):
         action_reset = menu.addAction("Reset Selection Transform")
         action_reset.triggered.connect(reset_transform)
 
+        gp = event.screenPos().toPoint()
         if IS_PYSIDE6:
-            gp = event.screenPos().toPoint() 
             menu.exec(gp)
         else:
-            gp = event.screenPos()
             menu.exec_(gp)
 
     def mouseMoveEvent(self, event):

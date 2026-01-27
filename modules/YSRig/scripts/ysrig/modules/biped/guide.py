@@ -35,7 +35,7 @@ class Guide():
 
         self.set_attr()
 
-        if jaw and eyes:
+        if jaw or eyes:
             data = {}
             data["pos"] = {"x":100, "y":-450}
             data["rot"] = 0
